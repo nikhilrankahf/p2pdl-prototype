@@ -167,6 +167,37 @@ if 'show_promotion_message' not in st.session_state:
 if 'popover_open' not in st.session_state:
     st.session_state.popover_open = False
 
+# TNT mapping based on actual lane data
+TNT_MAPPING = {
+    'AZ_FEDEX-AIR-1': 1,
+    'AZ_FEDEX-AIR-2': 2,
+    'AZ_FEDEX-AIRS-1': 1,
+    'AZ_FEDEX-G-1': 1,
+    'AZ_FEDEX-G-2': 2,
+    'AZ_FEDEX-Ground': 1,
+    'AZ_FEDEX-POROR': 2,
+    'AZ_FEDEX-PORTO': 2,  # FEDEX version
+    'AZ_FEDEX-GYRAZ-RS': 1,
+    'AZ_FEDEX-NOROR-RS': 2,
+    'AZ_FEDEX-RIACA': 1,
+    'AZ_FEDEX-SALUT': 2,
+    'AZ_FEDEX-STOCA-RS': 2,
+    'AZ_FEDEX-LAXCA': 1,  # Inferring from JITSU
+    'AZ_FEDEX-SDGCA': 1,  # Inferring from JITSU
+    'AZ_JITSU-PORTO': 2,
+    'AZ_JITSU-LAXCA': 1,
+    'AZ_JITSU-SDGCA': 1,
+    'AZ_JITSU-PASCA': 1,
+    'AZ_JITSU-GLEAZ': 1,
+    'AZ_JITSU-DFWTX': 2,
+    'AZ_JITSU-IAHTX': 2,
+    'AZ_JITSU-LASNV': 1,
+    'AZ_JITSU-RNONV': 2,
+    'AZ_JITSU-SALCA': 2,
+    'AZ_JITSU-SEAWA': 2,
+    'AZ_JITSU-SMFCA': 2,
+}
+
 # Generate sample lane data
 @st.cache_data
 def generate_lane_data():
@@ -178,21 +209,29 @@ def generate_lane_data():
                      'Thu': 'THURSDAY', 'Fri': 'FRIDAY', 'Sat': 'SATURDAY', 'Sun': 'SUNDAY'}
 
     for i in range(50):
-        lane_num = np.random.choice(['AIR-1', 'AIR-2', 'G-1', 'G-2', 'POROR', 'PORTO', 'LAXCA', 'SDGCA'])
+        # Mix of FEDEX and JITSU carriers
+        carrier = np.random.choice(['FEDEX', 'JITSU'], p=[0.6, 0.4])
+
+        if carrier == 'FEDEX':
+            lane_num = np.random.choice(['AIR-1', 'AIR-2', 'G-1', 'G-2', 'POROR', 'RIACA', 'SALUT'])
+        else:  # JITSU
+            lane_num = np.random.choice(['PORTO', 'LAXCA', 'SDGCA', 'PASCA', 'GLEAZ', 'DFWTX', 'SMFCA'])
+
         brand = np.random.choice(brands)
         ship_day_abbr = np.random.choice(ship_days)
         ship_day_name = ship_day_full[ship_day_abbr]
 
         # Create unique lane identifier
-        lane_name = f'AZ_FEDEX-{lane_num}' + (f'_{brand}' if brand == 'EP' else '')
+        lane_name = f'AZ_{carrier}-{lane_num}' + (f'_{brand}' if brand == 'EP' else '')
         lane_id = f'{lane_name}_{ship_day_name}_{i}'  # Unique identifier
 
         # CPT shows the ship day
         cpt_time = f"{np.random.randint(8,18):02d}:00"
         cpt = f"04-{np.random.randint(7,12):02d} ({ship_day_abbr}) {cpt_time}"
 
-        # TNT (Time in Transit) - typically 1-5 days depending on lane type
-        tnt = np.random.choice([1, 2, 3, 4, 5])
+        # Get TNT from mapping, default to 2 if not found
+        base_lane = lane_name.replace('_EP', '').replace('_HF', '')  # Remove brand suffix for lookup
+        tnt = TNT_MAPPING.get(base_lane, 2)
 
         lanes.append({
             'Lane_ID': lane_id,  # Unique identifier
