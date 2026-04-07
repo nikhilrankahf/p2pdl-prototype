@@ -191,11 +191,15 @@ def generate_lane_data():
         cpt_time = f"{np.random.randint(8,18):02d}:00"
         cpt = f"04-{np.random.randint(7,12):02d} ({ship_day_abbr}) {cpt_time}"
 
+        # TNT (Time in Transit) - typically 1-5 days depending on lane type
+        tnt = np.random.choice([1, 2, 3, 4, 5])
+
         lanes.append({
             'Lane_ID': lane_id,  # Unique identifier
             'Lane': lane_name,
             'Brand': brand,
             'Ship Day': ship_day_name,  # Full day name from CPT
+            'TNT': tnt,
             'CPT': cpt,
             'Box Volume': np.random.randint(50, 5000)
         })
@@ -400,7 +404,7 @@ def show_configuration():
         filtered_df = filtered_df[~filtered_df['Selected']]
 
     # Keep Lane_ID for tracking but don't display it
-    display_df = filtered_df[['Lane_ID', 'Selected', 'Lane', 'Brand', 'Ship Day', 'CPT', 'Box Volume']].copy()
+    display_df = filtered_df[['Lane_ID', 'Selected', 'Lane', 'Brand', 'Ship Day', 'CPT', 'TNT', 'Box Volume']].copy()
 
     # Show current selection count
     current_selected = len(st.session_state.selected_lanes)
@@ -437,9 +441,10 @@ def show_configuration():
             "Brand": st.column_config.TextColumn("Brand", width="small"),
             "Ship Day": st.column_config.TextColumn("Ship Day"),
             "CPT": st.column_config.TextColumn("CPT"),
+            "TNT": st.column_config.NumberColumn("TNT (days)", width="small", format="%d"),
             "Box Volume": st.column_config.NumberColumn("Box Volume", format="%d"),
         },
-        disabled=["Lane", "Brand", "Ship Day", "CPT", "Box Volume"],
+        disabled=["Lane", "Brand", "Ship Day", "CPT", "TNT", "Box Volume"],
         hide_index=True,
         use_container_width=True,
         height=dynamic_height,
@@ -712,7 +717,7 @@ else:  # Simulation mode
                         st.markdown(f"**Lane Details for {selected_shift}**")
                         # Get lanes for selected shift
                         shift_lanes = selected_lanes_df[selected_lanes_df['P2PDL_Shift'] == selected_shift][
-                            ['Lane', 'Brand', 'Ship Day', 'CPT', 'Box Volume']
+                            ['Lane', 'Brand', 'Ship Day', 'CPT', 'TNT', 'Box Volume']
                         ].copy()
                         shift_lanes = shift_lanes.rename(columns={'Ship Day': 'Original Ship Day'})
 
@@ -725,6 +730,7 @@ else:  # Simulation mode
                                 "Brand": st.column_config.TextColumn("Brand", width="small"),
                                 "Original Ship Day": st.column_config.TextColumn("Original Ship Day", width="medium"),
                                 "CPT": st.column_config.TextColumn("CPT", width="medium"),
+                                "TNT": st.column_config.NumberColumn("TNT (days)", width="small", format="%d"),
                                 "Box Volume": st.column_config.NumberColumn("Box Volume", width="medium", format="%d"),
                             }
                         )
