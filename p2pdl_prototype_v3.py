@@ -249,11 +249,6 @@ def show_configuration():
     st.caption("DC: AZ - Week: 2026-W15")
     st.markdown("---")
 
-    # Mode-specific messaging
-    if st.session_state.mode == 'Production':
-        if st.session_state.promoted and len(st.session_state.selected_lanes) > 0:
-            st.markdown('<div class="success-box">✅ <strong>Production Mode:</strong> P2PDL configuration is active. You can view, add, or deselect lanes below.</div>', unsafe_allow_html=True)
-
     # Live Needs % by Shift
     st.markdown("### Live Needs % by Shift")
     st.caption("Live needs cannot be set below 3% to ensure the plan can be generated successfully.")
@@ -460,11 +455,13 @@ def show_configuration():
     with col1:
         if st.button("💾 Save Configuration", use_container_width=True, type="primary", key="save_config"):
             st.session_state.selected_lanes = newly_selected.copy()  # Make a copy to ensure it's saved
+            st.session_state.show_config_modal = False  # Close modal
             # Show success and close modal
             st.toast(f"✅ Configuration saved! {len(newly_selected)} lanes selected for P2PDL.", icon="✅")
             st.rerun()
     with col2:
         if st.button("Cancel", use_container_width=True, key="cancel_config"):
+            st.session_state.show_config_modal = False  # Close modal
             st.rerun()
 
 # Call modal if triggered
@@ -510,11 +507,6 @@ if st.session_state.mode == 'Production':
         st.markdown('<div class="metric-container"><div style="color: #6b7280; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.5rem;">Unallocated</div><div style="font-size: 2rem; font-weight: bold; color: #111827;">5</div></div>', unsafe_allow_html=True)
     with col4:
         st.markdown('<div class="metric-container"><div style="color: #6b7280; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.5rem;">Completed</div><div style="font-size: 2rem; font-weight: bold; color: #111827;">66,592</div></div>', unsafe_allow_html=True)
-
-    if st.session_state.promoted and len(st.session_state.selected_lanes) > 0:
-        st.markdown("---")
-        total_p2pdl_vol = df_lanes[df_lanes['Lane_ID'].isin(st.session_state.selected_lanes)]['Box Volume'].sum()
-        st.markdown(f'<div class="success-box">✅ <strong>P2PDL Configuration Active:</strong> {len(st.session_state.selected_lanes)} lanes ({total_p2pdl_vol:,} boxes) are configured for P2PDL in the current production plan. <a href="#" style="color: #1d4ed8;">View in Configuration →</a></div>', unsafe_allow_html=True)
 
 else:  # Simulation mode
     # Show promotion success message if flag is set
@@ -738,10 +730,8 @@ else:  # Simulation mode
                         )
 
     else:
-        # Before simulation runs
-        if len(st.session_state.selected_lanes) > 0:
-            total_p2pdl_vol = df_lanes[df_lanes['Lane_ID'].isin(st.session_state.selected_lanes)]['Box Volume'].sum()
-            st.markdown(f'<div class="info-box">ℹ️ <strong>P2PDL Configuration Active:</strong> {len(st.session_state.selected_lanes)} lanes selected ({total_p2pdl_vol:,} boxes). Click "Simulate Plan Gen" to validate.</div>', unsafe_allow_html=True)
+        # Before simulation runs - no info box needed
+        pass
 
 # Footer
 st.markdown("---")
