@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Line Allocation Table - Riptide v2 Prototype</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f9fafb;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-bottom: 2rem;
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .filter-group label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        select {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            background: white;
+            color: #374151;
+            min-width: 200px;
+            cursor: pointer;
+        }
+
+        select:hover {
+            border-color: #9ca3af;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-left: auto;
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            color: #374151;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        button:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .info-banner {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            color: #1e40af;
+        }
+
+        .info-banner strong {
+            font-weight: 600;
+        }
+
+        /* Table styles */
+        .table-container {
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8125rem;
+            table-layout: fixed;
+        }
+
+        table colgroup col:nth-child(1) { width: 40px; }
+        table colgroup col:nth-child(2) { width: 15%; }
+        table colgroup col:nth-child(3) { width: 12%; }
+        table colgroup col:nth-child(4) { width: 18%; }
+        table colgroup col:nth-child(5) { width: 15%; }
+        table colgroup col:nth-child(6) { width: 20%; }
+        table colgroup col:nth-child(7) { width: auto; }
+
+        thead {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        th {
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: #2d7738;
+            font-size: 0.8125rem;
+            letter-spacing: 0;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        th:hover {
+            background-color: #e8f3e8;
+        }
+
+        th.numeric {
+            text-align: right;
+        }
+
+        th.sortable::after {
+            content: '↕';
+            margin-left: 6px;
+            color: #6c757d;
+            font-size: 0.75rem;
+        }
+
+        th.sort-asc::after {
+            content: '↑';
+            color: #2d7738;
+        }
+
+        th.sort-desc::after {
+            content: '↓';
+            color: #2d7738;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        tbody tr:first-child {
+            background-color: #f0f7f0;
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        tbody tr:first-child:hover {
+            background-color: #e8f3e8;
+        }
+
+        td {
+            padding: 10px 14px;
+            color: #212529;
+        }
+
+        td.numeric {
+            text-align: right;
+        }
+
+        .expand-icon {
+            cursor: pointer;
+            user-select: none;
+            font-size: 1rem;
+            color: #6b7280;
+            transition: all 0.2s;
+            display: inline-block;
+            width: 20px;
+        }
+
+        .expand-icon.expanded {
+            /* No rotation needed - we'll change the icon */
+        }
+
+        .parent-row {
+            cursor: pointer;
+        }
+
+        .child-row {
+            background-color: #f9fafb;
+            display: none;
+        }
+
+        .child-row.visible {
+            display: table-row;
+        }
+
+        .child-row td {
+            font-size: 0.8125rem;
+            color: #6b7280;
+        }
+
+        .child-row td:nth-child(4) {
+            padding-left: 2rem;
+            text-align: left;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Line Allocation Table</h1>
+        <p class="subtitle">View and drill down into line allocations by shift and line type</p>
+
+        <div class="info-banner">
+            <strong>Prototype Instructions:</strong> Click on any row (or the ▶ arrow) to expand and view individual line details. Use filters to narrow down the data.
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label for="shiftFilter">Shift</label>
+                <select id="shiftFilter" onchange="applyFilters()">
+                    <option value="">All Shifts</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="lineTypeFilter">Line Type</label>
+                <select id="lineTypeFilter" onchange="applyFilters()">
+                    <option value="">All Lines</option>
+                </select>
+            </div>
+
+            <div class="button-group">
+                <button onclick="expandAll()">⊞ Expand All</button>
+                <button onclick="collapseAll()">⊟ Collapse All</button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table id="dataTable">
+                <colgroup>
+                    <col style="width: 40px;">
+                    <col style="width: 15%;">
+                    <col style="width: 12%;">
+                    <col style="width: 18%;">
+                    <col style="width: 15%;">
+                    <col style="width: 20%;">
+                    <col style="width: auto;">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th class="sortable" onclick="sortTable('shift')">Shift</th>
+                        <th class="sortable" onclick="sortTable('lineType')">Line Type</th>
+                        <th class="sortable" onclick="sortTable('totalLines')">Total Lines</th>
+                        <th class="numeric sortable" onclick="sortTable('hcAllocated')">HC Allocated</th>
+                        <th class="numeric sortable" onclick="sortTable('totalLineRuntime')">Total Line Runtime (hrs)</th>
+                        <th class="numeric sortable" onclick="sortTable('totalBoxes')">Total Boxes</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Data will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Sample data generation
+        function generateSampleData() {
+            const shifts = [
+                'thursday_night', 'friday_day', 'friday_night',
+                'saturday_day', 'saturday_night', 'sunday_day',
+                'sunday_night', 'monday_day'
+            ];
+
+            const lineTypeConfigs = {
+                'AUTO': { maxLines: 4, hcPerLine: 10.33, runtime: 9.25, bph: 187 }, // Line 4 is top-off, doesn't do boxes
+                '3Bay': { maxLines: 1, hcPerLine: 36, runtime: 8.98, bph: 159 },
+                'LDL': { maxLines: 1, hcPerLine: 51.8, runtime: 8.49, bph: 131 },
+                'EP': { maxLines: 1, hcPerLine: 17, runtime: 5.50, bph: 156 },
+                'KT_Flexi': { maxLines: 1, hcPerLine: 20.67, runtime: 8.98, bph: 105 },
+                'KT_HP': { maxLines: 1, hcPerLine: 15.25, runtime: 7.50, bph: 95 },
+                'Flexi': { maxLines: 1, hcPerLine: 10, runtime: 8.59, bph: 110 }
+            };
+
+            const data = [];
+
+            shifts.forEach(shift => {
+                const lineTypes = Object.keys(lineTypeConfigs);
+                const numLineTypes = 3 + Math.floor(Math.random() * 3);
+                const selectedLineTypes = lineTypes.sort(() => 0.5 - Math.random()).slice(0, numLineTypes);
+
+                selectedLineTypes.forEach(lineType => {
+                    const config = lineTypeConfigs[lineType];
+                    const numLines = lineType === 'AUTO' ? (2 + Math.floor(Math.random() * 3)) : 1;
+
+                    const totalHcCalculated = config.hcPerLine * numLines;
+                    const hcAllocated = Math.ceil(totalHcCalculated);
+                    const totalRuntime = parseFloat((config.runtime * numLines).toFixed(2));
+
+                    // Calculate boxes per line - round up each line
+                    const boxesPerLine = Math.ceil(config.runtime * config.bph);
+
+                    const lines = [];
+                    for (let i = 1; i <= numLines; i++) {
+                        // For AUTO lines: Line 4 is top-off mod (no boxes), Lines 1-3 produce boxes
+                        const isAutoTopOff = (lineType === 'AUTO' && i === 4);
+                        const lineBoxes = isAutoTopOff ? 0 : boxesPerLine;
+
+                        const childRow = {
+                            lineId: `${lineType} Line ${i}`,
+                            hc: config.hcPerLine,
+                            runtime: config.runtime,
+                            boxes: lineBoxes,
+                            bph: isAutoTopOff ? 0 : config.bph
+                        };
+
+                        if (lineType === 'KT_Flexi' || lineType === 'KT_HP') {
+                            const bay1 = parseFloat((config.hcPerLine * 0.15).toFixed(2));
+                            const bay2 = parseFloat((config.hcPerLine * 0.35).toFixed(2));
+                            const bay3 = parseFloat((config.hcPerLine - bay1 - bay2).toFixed(2));
+                            childRow.hcBreakdown = `1Bay: ${bay1}, 2Bay: ${bay2}, 3Bay: ${bay3}`;
+                        }
+
+                        lines.push(childRow);
+                    }
+
+                    // Calculate total boxes (for AUTO, exclude Line 4 which produces 0 boxes)
+                    const totalBoxes = lineType === 'AUTO'
+                        ? boxesPerLine * (numLines - 1)
+                        : boxesPerLine * numLines;
+
+                    data.push({
+                        shift,
+                        lineType,
+                        totalLines: numLines,
+                        hcAllocated,
+                        totalLineRuntime: totalRuntime,
+                        totalBoxes,
+                        lines
+                    });
+                });
+            });
+
+            return data;
+        }
+
+        let allData = generateSampleData();
+        let sortState = { column: null, direction: 'asc' };
+
+        // Populate filters
+        const shifts = [...new Set(allData.map(r => r.shift))].sort();
+        const lineTypes = [...new Set(allData.map(r => r.lineType))].sort();
+
+        const shiftSelect = document.getElementById('shiftFilter');
+        shifts.forEach(shift => {
+            const option = document.createElement('option');
+            option.value = shift;
+            option.textContent = shift.replace(/_/g, ' ').split(' ')
+                .map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+            shiftSelect.appendChild(option);
+        });
+
+        const lineTypeSelect = document.getElementById('lineTypeFilter');
+        lineTypes.forEach(lineType => {
+            const option = document.createElement('option');
+            option.value = lineType;
+            option.textContent = lineType;
+            lineTypeSelect.appendChild(option);
+        });
+
+        // Render table
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            const groupedByShift = {};
+            data.forEach(row => {
+                if (!groupedByShift[row.shift]) {
+                    groupedByShift[row.shift] = [];
+                }
+                groupedByShift[row.shift].push(row);
+            });
+
+            Object.keys(groupedByShift).sort().forEach(shift => {
+                const shiftRows = groupedByShift[shift];
+
+                shiftRows.forEach((row, idx) => {
+                    const parentId = `parent-${shift}-${row.lineType}`;
+
+                    // Parent row
+                    const tr = document.createElement('tr');
+                    tr.className = 'parent-row';
+                    tr.dataset.parentId = parentId;
+                    tr.onclick = () => toggleExpand(parentId);
+
+                    tr.innerHTML = `
+                        <td><span class="expand-icon" id="icon-${parentId}">▶</span></td>
+                        <td>${shift.replace(/_/g, ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</td>
+                        <td>${row.lineType}</td>
+                        <td>${row.totalLines}</td>
+                        <td class="numeric">${row.hcAllocated}</td>
+                        <td class="numeric">${row.totalLineRuntime.toFixed(2)}</td>
+                        <td class="numeric">${row.totalBoxes.toLocaleString()}</td>
+                    `;
+                    tbody.appendChild(tr);
+
+                    // Child rows
+                    row.lines.forEach(line => {
+                        const childTr = document.createElement('tr');
+                        childTr.className = 'child-row';
+                        childTr.dataset.parentId = parentId;
+
+                        const emptyCell = '<td></td>';
+
+                        if (line.hcBreakdown) {
+                            // Kitting line with bay breakdown
+                            childTr.innerHTML =
+                                emptyCell +
+                                emptyCell +
+                                emptyCell +
+                                `<td style="padding-left: 2rem; text-align: left;">${line.lineId}<br><span style="font-size: 0.75rem; color: #9ca3af;">${line.hcBreakdown}</span></td>
+                                <td class="numeric">${line.hc.toFixed(2)}</td>
+                                <td class="numeric">${line.runtime.toFixed(2)}</td>
+                                <td class="numeric">${line.boxes.toLocaleString()}</td>`;
+                        } else {
+                            // Regular line
+                            const bphDisplay = line.bph > 0 ? `BPH: ${line.bph}` : 'Top-off (no boxes)';
+                            childTr.innerHTML =
+                                emptyCell +
+                                emptyCell +
+                                emptyCell +
+                                `<td style="padding-left: 2rem; text-align: left;">${line.lineId}<br><span style="font-size: 0.75rem; color: #9ca3af;">${bphDisplay}</span></td>
+                                <td class="numeric">${line.hc.toFixed(2)}</td>
+                                <td class="numeric">${line.runtime.toFixed(2)}</td>
+                                <td class="numeric">${line.boxes.toLocaleString()}</td>`;
+                        }
+                        tbody.appendChild(childTr);
+                    });
+                });
+            });
+        }
+
+        function toggleExpand(parentId) {
+            const icon = document.getElementById(`icon-${parentId}`);
+            const childRows = document.querySelectorAll(`.child-row[data-parent-id="${parentId}"]`);
+
+            const isExpanded = icon.classList.contains('expanded');
+
+            if (isExpanded) {
+                // Collapse
+                icon.classList.remove('expanded');
+                icon.textContent = '▶';
+                childRows.forEach(row => row.classList.remove('visible'));
+            } else {
+                // Expand - point down
+                icon.classList.add('expanded');
+                icon.textContent = '▼';
+                childRows.forEach(row => row.classList.add('visible'));
+            }
+        }
+
+        function expandAll() {
+            document.querySelectorAll('.expand-icon').forEach(icon => {
+                const parentId = icon.id.replace('icon-', '');
+                icon.classList.add('expanded');
+                icon.textContent = '▼';
+                document.querySelectorAll(`.child-row[data-parent-id="${parentId}"]`)
+                    .forEach(row => row.classList.add('visible'));
+            });
+        }
+
+        function collapseAll() {
+            document.querySelectorAll('.expand-icon').forEach(icon => {
+                const parentId = icon.id.replace('icon-', '');
+                icon.classList.remove('expanded');
+                icon.textContent = '▶';
+                document.querySelectorAll(`.child-row[data-parent-id="${parentId}"]`)
+                    .forEach(row => row.classList.remove('visible'));
+            });
+        }
+
+        function applyFilters() {
+            const shiftValue = document.getElementById('shiftFilter').value;
+            const lineTypeValue = document.getElementById('lineTypeFilter').value;
+
+            let filteredData = allData;
+
+            if (shiftValue) {
+                filteredData = filteredData.filter(r => r.shift === shiftValue);
+            }
+
+            if (lineTypeValue) {
+                filteredData = filteredData.filter(r => r.lineType === lineTypeValue);
+            }
+
+            renderTable(filteredData);
+        }
+
+        function sortTable(column) {
+            // Toggle sort direction
+            if (sortState.column === column) {
+                sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortState.column = column;
+                sortState.direction = 'asc';
+            }
+
+            // Update header indicators
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+            });
+
+            const activeHeader = document.querySelector(`th[onclick="sortTable('${column}')"]`);
+            if (activeHeader) {
+                activeHeader.classList.add(sortState.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+            }
+
+            // Sort data
+            const shiftValue = document.getElementById('shiftFilter').value;
+            const lineTypeValue = document.getElementById('lineTypeFilter').value;
+
+            let filteredData = allData;
+            if (shiftValue) {
+                filteredData = filteredData.filter(r => r.shift === shiftValue);
+            }
+            if (lineTypeValue) {
+                filteredData = filteredData.filter(r => r.lineType === lineTypeValue);
+            }
+
+            const sortedData = [...filteredData].sort((a, b) => {
+                let aVal = a[column];
+                let bVal = b[column];
+
+                if (typeof aVal === 'string') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                }
+
+                if (sortState.direction === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+
+            renderTable(sortedData);
+        }
+
+        // Initial render
+        renderTable(allData);
+    </script>
+</body>
+</html>
