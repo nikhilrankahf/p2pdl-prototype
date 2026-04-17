@@ -413,10 +413,27 @@
                 // Determine category
                 const category = assemblyTypes.includes(row.lineType) ? 'Assembly' : 'Kitting';
 
+                // Handle HC sharing scenarios
+                let hcDisplay = Math.ceil(totalHc);
+                let hcNote = '';
+
+                // Saturday Night: LDL → Legacy HC sharing
+                if (row.shift === 'saturday_night') {
+                    if (row.lineType === 'LDL') {
+                        // LDL: 26 HC (source)
+                        hcDisplay = 26;
+                    } else if (row.lineType === 'Legacy') {
+                        // Legacy: 15 HC base + 26 from LDL
+                        hcDisplay = 15;
+                        hcNote = '+26 from LDL';
+                    }
+                }
+
                 return {
                     ...row,
                     category,
-                    hcAllocated: Math.ceil(totalHc),
+                    hcAllocated: hcDisplay,
+                    hcNote,
                     lines
                 };
             });
@@ -480,12 +497,16 @@
                         (row.totalLines === 1 ? 'Team' : 'Teams') :
                         (row.totalLines === 1 ? 'Line' : 'Lines');
 
+                    const hcDisplayText = row.hcNote
+                        ? `${row.hcAllocated} <span style="color: #059669; font-size: 0.85rem;">(${row.hcNote})</span>`
+                        : row.hcAllocated;
+
                     tr.innerHTML = `
                         <td>${hasMultipleLines ? `<span class="expand-icon" id="icon-${parentId}">▶</span>` : ''}</td>
                         <td>${shift.replace(/_/g, ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</td>
                         <td>${row.lineType}</td>
                         <td>${row.totalLines} ${lineLabel}</td>
-                        <td class="numeric">${row.hcAllocated}</td>
+                        <td class="numeric">${hcDisplayText}</td>
                         <td class="numeric">${row.totalLineRuntime.toFixed(2)}</td>
                         <td class="numeric">${row.totalBoxes.toLocaleString()}</td>
                     `;
