@@ -397,7 +397,6 @@
             // Generate child rows for each parent
             const data = realData.map(row => {
                 const lines = [];
-                const runtime = row.totalLineRuntime / row.totalLines;
                 const hcPerLine = hcPerLineType[row.lineType] || 0;
                 const totalHc = hcPerLine * row.totalLines;
 
@@ -405,15 +404,37 @@
                 // Production lines are always (totalLines - 1)
                 const isAuto = row.lineType === 'AUTO';
                 const productionLines = isAuto ? (row.totalLines - 1) : row.totalLines;
-                const boxesPerLine = Math.ceil(row.totalBoxes / productionLines);
+
+                // Runtime distribution: maximize each line/team to 9.25 hours before adding new ones
+                const fullShiftHours = 9.25;
+                const fullLines = Math.floor(row.totalLineRuntime / fullShiftHours);
+                const remainingHours = row.totalLineRuntime - (fullLines * fullShiftHours);
 
                 for (let i = 1; i <= row.totalLines; i++) {
+                    // Determine runtime for this line/team (maximize to 9.25 hrs first)
+                    let lineRuntime;
+                    if (i <= fullLines) {
+                        lineRuntime = fullShiftHours;
+                    } else if (i === fullLines + 1) {
+                        lineRuntime = remainingHours;
+                    } else {
+                        lineRuntime = 0; // Should not happen with correct data
+                    }
+
                     // For AUTO: Line 4 is ALWAYS the last line and ALWAYS has 0 boxes
-                    // Show lines as: 1, 2, 3, 4 (but only up to totalLines)
-                    // Line 4 is always at position = totalLines
                     const isAutoLine4 = (isAuto && i === row.totalLines);
-                    const lineBoxes = isAutoLine4 ? 0 : boxesPerLine;
-                    const lineBph = lineBoxes > 0 ? Math.ceil(lineBoxes / runtime) : 0;
+
+                    // Calculate boxes for this line
+                    let lineBoxes;
+                    if (isAutoLine4) {
+                        lineBoxes = 0;
+                    } else {
+                        // Distribute boxes proportionally based on runtime
+                        const proportion = lineRuntime / row.totalLineRuntime;
+                        lineBoxes = Math.ceil(row.totalBoxes * proportion);
+                    }
+
+                    const lineBph = lineBoxes > 0 && lineRuntime > 0 ? Math.ceil(lineBoxes / lineRuntime) : 0;
 
                     // For AUTO, renumber to show as Line 1, 2, 3, 4 (not sequential i)
                     let displayLineNumber;
@@ -432,7 +453,7 @@
                     lines.push({
                         lineId: lineLabel,
                         hc: hcPerLine,
-                        runtime: parseFloat(runtime.toFixed(2)),
+                        runtime: parseFloat(lineRuntime.toFixed(2)),
                         boxes: lineBoxes,
                         bph: lineBph
                     });
