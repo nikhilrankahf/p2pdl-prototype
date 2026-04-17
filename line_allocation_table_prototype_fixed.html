@@ -235,6 +235,15 @@
     <div class="container">
         <div class="filters">
             <div class="filter-group">
+                <label for="categoryFilter">Category</label>
+                <select id="categoryFilter" onchange="applyFilters()">
+                    <option value="">All</option>
+                    <option value="Assembly">Assembly</option>
+                    <option value="Kitting">Kitting</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
                 <label for="shiftFilter">Shift</label>
                 <select id="shiftFilter" onchange="applyFilters()">
                     <option value="">All Shifts</option>
@@ -353,6 +362,10 @@
                 'Pio': 1.3
             };
 
+            // Category mapping
+            const assemblyTypes = ['AUTO', 'LDL', 'EP', 'Core Line', 'Grocery Line'];
+            const kittingTypes = ['Legacy', 'Cart Pick', 'Flexi', 'Pio'];
+
             // Generate child rows for each parent
             const data = realData.map(row => {
                 const lines = [];
@@ -379,8 +392,12 @@
                     });
                 }
 
+                // Determine category
+                const category = assemblyTypes.includes(row.lineType) ? 'Assembly' : 'Kitting';
+
                 return {
                     ...row,
+                    category,
                     hcAllocated: Math.ceil(totalHc),
                     lines
                 };
@@ -534,10 +551,15 @@
         }
 
         function applyFilters() {
+            const categoryValue = document.getElementById('categoryFilter').value;
             const shiftValue = document.getElementById('shiftFilter').value;
             const lineTypeValue = document.getElementById('lineTypeFilter').value;
 
             let filteredData = allData;
+
+            if (categoryValue) {
+                filteredData = filteredData.filter(r => r.category === categoryValue);
+            }
 
             if (shiftValue) {
                 filteredData = filteredData.filter(r => r.shift === shiftValue);
@@ -570,10 +592,14 @@
             }
 
             // Sort data
+            const categoryValue = document.getElementById('categoryFilter').value;
             const shiftValue = document.getElementById('shiftFilter').value;
             const lineTypeValue = document.getElementById('lineTypeFilter').value;
 
             let filteredData = allData;
+            if (categoryValue) {
+                filteredData = filteredData.filter(r => r.category === categoryValue);
+            }
             if (shiftValue) {
                 filteredData = filteredData.filter(r => r.shift === shiftValue);
             }
