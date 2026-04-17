@@ -160,6 +160,34 @@
             color: #2d7738;
         }
 
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1f2937;
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            margin-bottom: 0.5rem;
+            z-index: 1000;
+        }
+
+        .tooltip:hover::after {
+            opacity: 1;
+        }
+
         tbody tr {
             border-bottom: 1px solid #dee2e6;
         }
@@ -280,7 +308,7 @@
                         <th class="sortable" onclick="sortTable('shift')">Shift</th>
                         <th class="sortable" onclick="sortTable('lineType')">Line Type</th>
                         <th class="sortable" onclick="sortTable('totalLines')">Total Lines/Teams</th>
-                        <th class="numeric sortable" onclick="sortTable('hcAllocated')">HC Allocated</th>
+                        <th class="numeric sortable tooltip" onclick="sortTable('hcAllocated')" data-tooltip="HC count shows associates starting on this line. Green (+X) shows associates who moved from another line.">HC Allocated</th>
                         <th class="numeric sortable" onclick="sortTable('totalLineRuntime')">Total Line Runtime (hrs)</th>
                         <th class="numeric sortable" onclick="sortTable('totalBoxes')">Total Boxes/Kits</th>
                     </tr>
