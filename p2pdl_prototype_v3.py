@@ -612,6 +612,22 @@ else:  # Simulation mode
 
         st.markdown("<br>", unsafe_allow_html=True)
 
+        # Line Allocation Table
+        st.markdown("### Line Allocation Table")
+        import streamlit.components.v1 as components
+
+        # Read the HTML file
+        try:
+            with open('line_allocation_table_prototype_fixed.html', 'r') as f:
+                html_content = f.read()
+
+            # Display the HTML
+            components.html(html_content, height=900, scrolling=True)
+        except FileNotFoundError:
+            st.info("Line allocation table prototype not found. Please ensure line_allocation_table_prototype_fixed.html is in the repository.")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
         # Needs Action section (collapsible)
         with st.expander("Needs Action - LATE Boxes Risk", expanded=True):
             st.markdown('<div style="text-align: center; padding: 2rem; color: #6b7280;">No late boxes found.</div>', unsafe_allow_html=True)
