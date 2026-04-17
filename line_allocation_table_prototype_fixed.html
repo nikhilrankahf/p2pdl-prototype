@@ -203,6 +203,10 @@
             cursor: pointer;
         }
 
+        tr:not(.parent-row) {
+            cursor: default;
+        }
+
         .child-row {
             background-color: #f9fafb;
             display: none;
@@ -409,15 +413,18 @@
 
                 shiftRows.forEach((row, idx) => {
                     const parentId = `parent-${shift}-${row.lineType}`;
+                    const hasMultipleLines = row.totalLines > 1;
 
                     // Parent row
                     const tr = document.createElement('tr');
-                    tr.className = 'parent-row';
+                    tr.className = hasMultipleLines ? 'parent-row' : '';
                     tr.dataset.parentId = parentId;
-                    tr.onclick = () => toggleExpand(parentId);
+                    if (hasMultipleLines) {
+                        tr.onclick = () => toggleExpand(parentId);
+                    }
 
                     tr.innerHTML = `
-                        <td><span class="expand-icon" id="icon-${parentId}">▶</span></td>
+                        <td>${hasMultipleLines ? `<span class="expand-icon" id="icon-${parentId}">▶</span>` : ''}</td>
                         <td>${shift.replace(/_/g, ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</td>
                         <td>${row.lineType}</td>
                         <td>${row.totalLines}</td>
@@ -427,38 +434,40 @@
                     `;
                     tbody.appendChild(tr);
 
-                    // Child rows
-                    row.lines.forEach(line => {
-                        const childTr = document.createElement('tr');
-                        childTr.className = 'child-row';
-                        childTr.dataset.parentId = parentId;
+                    // Child rows (only if multiple lines)
+                    if (hasMultipleLines) {
+                        row.lines.forEach(line => {
+                            const childTr = document.createElement('tr');
+                            childTr.className = 'child-row';
+                            childTr.dataset.parentId = parentId;
 
-                        const emptyCell = '<td></td>';
+                            const emptyCell = '<td></td>';
 
-                        if (line.hcBreakdown) {
-                            // Kitting line with bay breakdown
-                            childTr.innerHTML =
-                                emptyCell +
-                                emptyCell +
-                                emptyCell +
-                                `<td style="padding-left: 2rem; text-align: left;">${line.lineId}<br><span style="font-size: 0.75rem; color: #9ca3af;">${line.hcBreakdown}</span></td>
-                                <td class="numeric">${line.hc.toFixed(2)}</td>
-                                <td class="numeric">${line.runtime.toFixed(2)}</td>
-                                <td class="numeric">${line.boxes.toLocaleString()}</td>`;
-                        } else {
-                            // Regular line
-                            const bphDisplay = line.bph > 0 ? `BPH: ${line.bph}` : 'Top-off (no boxes)';
-                            childTr.innerHTML =
-                                emptyCell +
-                                emptyCell +
-                                emptyCell +
-                                `<td style="padding-left: 2rem; text-align: left;">${line.lineId}<br><span style="font-size: 0.75rem; color: #9ca3af;">${bphDisplay}</span></td>
-                                <td class="numeric">${line.hc.toFixed(2)}</td>
-                                <td class="numeric">${line.runtime.toFixed(2)}</td>
-                                <td class="numeric">${line.boxes.toLocaleString()}</td>`;
-                        }
-                        tbody.appendChild(childTr);
-                    });
+                            if (line.hcBreakdown) {
+                                // Kitting line with bay breakdown
+                                childTr.innerHTML =
+                                    emptyCell +
+                                    emptyCell +
+                                    emptyCell +
+                                    `<td style="padding-left: 2rem; text-align: left;">${line.lineId}<br><span style="font-size: 0.75rem; color: #9ca3af;">${line.hcBreakdown}</span></td>
+                                    <td class="numeric">${line.hc.toFixed(2)}</td>
+                                    <td class="numeric">${line.runtime.toFixed(2)}</td>
+                                    <td class="numeric">${line.boxes.toLocaleString()}</td>`;
+                            } else {
+                                // Regular line - no BPH
+                                const bphDisplay = line.bph > 0 ? '' : '<br><span style="font-size: 0.75rem; color: #9ca3af;">Top-off (no boxes)</span>';
+                                childTr.innerHTML =
+                                    emptyCell +
+                                    emptyCell +
+                                    emptyCell +
+                                    `<td style="padding-left: 2rem; text-align: left;">${line.lineId}${bphDisplay}</td>
+                                    <td class="numeric">${line.hc.toFixed(2)}</td>
+                                    <td class="numeric">${line.runtime.toFixed(2)}</td>
+                                    <td class="numeric">${line.boxes.toLocaleString()}</td>`;
+                            }
+                            tbody.appendChild(childTr);
+                        });
+                    }
                 });
             });
         }
