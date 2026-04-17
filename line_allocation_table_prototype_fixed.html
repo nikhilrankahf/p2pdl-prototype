@@ -367,8 +367,11 @@
                     const lineBoxes = isAutoTopOff ? 0 : boxesPerLine;
                     const lineBph = lineBoxes > 0 ? Math.ceil(lineBoxes / runtime) : 0;
 
+                    // Legacy uses "Team" instead of "Line"
+                    const lineLabel = row.lineType === 'Legacy' ? `Team ${i}` : `${row.lineType} Line ${i}`;
+
                     lines.push({
-                        lineId: `${row.lineType} Line ${i}`,
+                        lineId: lineLabel,
                         hc: hcPerLine,
                         runtime: parseFloat(runtime.toFixed(2)),
                         boxes: lineBoxes,
