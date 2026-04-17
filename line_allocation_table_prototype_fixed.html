@@ -370,13 +370,18 @@
             const data = realData.map(row => {
                 const lines = [];
                 const runtime = row.totalLineRuntime / row.totalLines;
-                const boxesPerLine = Math.ceil(row.totalBoxes / row.totalLines);
                 const hcPerLine = hcPerLineType[row.lineType] || 0;
                 const totalHc = hcPerLine * row.totalLines;
 
+                // For AUTO: if 4 lines, Line 4 is top-off (0 boxes), distribute boxes among Lines 1-3
+                // If 3 or fewer lines, distribute evenly (no Line 4 = no top-off)
+                const hasAutoTopOff = (row.lineType === 'AUTO' && row.totalLines === 4);
+                const productionLines = hasAutoTopOff ? 3 : row.totalLines;
+                const boxesPerLine = Math.ceil(row.totalBoxes / productionLines);
+
                 for (let i = 1; i <= row.totalLines; i++) {
-                    // For AUTO: Line 4 is top-off (no boxes)
-                    const isAutoTopOff = (row.lineType === 'AUTO' && i === 4);
+                    // For AUTO: Line 4 is top-off (no boxes) only when there are 4 lines
+                    const isAutoTopOff = (row.lineType === 'AUTO' && i === 4 && row.totalLines === 4);
                     const lineBoxes = isAutoTopOff ? 0 : boxesPerLine;
                     const lineBph = lineBoxes > 0 ? Math.ceil(lineBoxes / runtime) : 0;
 
