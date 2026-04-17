@@ -195,10 +195,10 @@ else:
     # Streamlit Version Page
     # Header
     st.markdown("# 📊 Line Allocation Table")
-st.markdown('<p class="subtitle">View and drill down into line allocations by shift and line type</p>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">View and drill down into line allocations by shift and line type</p>', unsafe_allow_html=True)
 
-# Filters
-col1, col2, col3, col4 = st.columns([1.5, 1.5, 1, 1])
+    # Filters
+    col1, col2, col3, col4 = st.columns([1.5, 1.5, 1, 1])
 
     with col1:
         shift_options = ['All Shifts'] + sorted(df_parent['shift'].unique().tolist())
