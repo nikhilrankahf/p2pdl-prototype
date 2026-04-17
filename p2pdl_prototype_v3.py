@@ -565,7 +565,7 @@ if st.session_state.mode == 'Production':
             html_content = f.read()
 
         # Display the HTML with better styling
-        components.html(html_content, height=850, scrolling=False)
+        components.html(html_content, height=1200, scrolling=True)
     except FileNotFoundError:
         st.info("Line allocation table prototype not found. Please ensure line_allocation_table_prototype_fixed.html is in the repository.")
 
