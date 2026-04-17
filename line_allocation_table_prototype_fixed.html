@@ -340,11 +340,26 @@
                 { shift: 'monday_night', lineType: 'Cart Pick', totalLines: 1, totalLineRuntime: 1.4, totalBoxes: 42 },
             ];
 
+            // HC per line type
+            const hcPerLineType = {
+                'AUTO': 10.33,
+                'LDL': 26,
+                'Legacy': 6.8,
+                'EP': 17,
+                'Cart Pick': 1.25,
+                'Flexi': 9.3,
+                'Grocery Line': 27,
+                'Core Line': 19,
+                'Pio': 1.3
+            };
+
             // Generate child rows for each parent
             const data = realData.map(row => {
                 const lines = [];
                 const runtime = row.totalLineRuntime / row.totalLines;
                 const boxesPerLine = Math.ceil(row.totalBoxes / row.totalLines);
+                const hcPerLine = hcPerLineType[row.lineType] || 0;
+                const totalHc = hcPerLine * row.totalLines;
 
                 for (let i = 1; i <= row.totalLines; i++) {
                     // For AUTO: Line 4 is top-off (no boxes)
@@ -354,7 +369,7 @@
 
                     lines.push({
                         lineId: `${row.lineType} Line ${i}`,
-                        hc: 0, // HC data not provided in PDFs
+                        hc: hcPerLine,
                         runtime: parseFloat(runtime.toFixed(2)),
                         boxes: lineBoxes,
                         bph: lineBph
@@ -363,7 +378,7 @@
 
                 return {
                     ...row,
-                    hcAllocated: 0, // HC data not provided
+                    hcAllocated: Math.ceil(totalHc),
                     lines
                 };
             });
