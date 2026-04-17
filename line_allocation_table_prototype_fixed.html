@@ -280,81 +280,88 @@
     </div>
 
     <script>
-        // Sample data generation
+        // Real production data
         function generateSampleData() {
-            const shifts = [
-                'thursday_night', 'friday_day', 'friday_night',
-                'saturday_day', 'saturday_night', 'sunday_day',
-                'sunday_night', 'monday_day'
+            const realData = [
+                // AUTO
+                { shift: 'thursday_night', lineType: 'AUTO', totalLines: 4, totalLineRuntime: 37.0, totalBoxes: 5187 },
+                { shift: 'friday_day', lineType: 'AUTO', totalLines: 4, totalLineRuntime: 37.0, totalBoxes: 5186 },
+                { shift: 'friday_night', lineType: 'AUTO', totalLines: 4, totalLineRuntime: 37.0, totalBoxes: 5187 },
+                { shift: 'saturday_day', lineType: 'AUTO', totalLines: 4, totalLineRuntime: 37.0, totalBoxes: 5187 },
+                { shift: 'saturday_night', lineType: 'AUTO', totalLines: 4, totalLineRuntime: 37.0, totalBoxes: 5187 },
+                { shift: 'sunday_day', lineType: 'AUTO', totalLines: 4, totalLineRuntime: 37.0, totalBoxes: 5186 },
+                { shift: 'sunday_night', lineType: 'AUTO', totalLines: 4, totalLineRuntime: 37.0, totalBoxes: 5188 },
+                { shift: 'monday_day', lineType: 'AUTO', totalLines: 4, totalLineRuntime: 37.0, totalBoxes: 5187 },
+                { shift: 'monday_night', lineType: 'AUTO', totalLines: 3, totalLineRuntime: 23.3, totalBoxes: 3483 },
+                { shift: 'tuesday_day', lineType: 'AUTO', totalLines: 3, totalLineRuntime: 27.7, totalBoxes: 4151 },
+                { shift: 'tuesday_night', lineType: 'AUTO', totalLines: 3, totalLineRuntime: 25.4, totalBoxes: 2213 },
+
+                // LDL
+                { shift: 'thursday_night', lineType: 'LDL', totalLines: 2, totalLineRuntime: 18.5, totalBoxes: 2219 },
+                { shift: 'friday_day', lineType: 'LDL', totalLines: 2, totalLineRuntime: 18.5, totalBoxes: 2219 },
+                { shift: 'friday_night', lineType: 'LDL', totalLines: 2, totalLineRuntime: 18.5, totalBoxes: 2219 },
+                { shift: 'saturday_day', lineType: 'LDL', totalLines: 2, totalLineRuntime: 18.5, totalBoxes: 2217 },
+                { shift: 'saturday_night', lineType: 'LDL', totalLines: 1, totalLineRuntime: 7.0, totalBoxes: 844 },
+                { shift: 'sunday_day', lineType: 'LDL', totalLines: 2, totalLineRuntime: 16.1, totalBoxes: 1936 },
+                { shift: 'monday_day', lineType: 'LDL', totalLines: 1, totalLineRuntime: 8.6, totalBoxes: 1031 },
+                { shift: 'tuesday_day', lineType: 'LDL', totalLines: 1, totalLineRuntime: 9.3, totalBoxes: 1110 },
+
+                // EP
+                { shift: 'friday_day', lineType: 'EP', totalLines: 1, totalLineRuntime: 9.2, totalBoxes: 1202 },
+                { shift: 'saturday_day', lineType: 'EP', totalLines: 1, totalLineRuntime: 8.3, totalBoxes: 1075 },
+                { shift: 'sunday_day', lineType: 'EP', totalLines: 2, totalLineRuntime: 18.5, totalBoxes: 2404 },
+                { shift: 'tuesday_day', lineType: 'EP', totalLines: 2, totalLineRuntime: 17.4, totalBoxes: 2258 },
+
+                // Legacy (Kitting)
+                { shift: 'thursday_night', lineType: 'Legacy', totalLines: 2, totalLineRuntime: 9.3, totalBoxes: 7372 },
+                { shift: 'friday_day', lineType: 'Legacy', totalLines: 7, totalLineRuntime: 61.2, totalBoxes: 20206 },
+                { shift: 'saturday_day', lineType: 'Legacy', totalLines: 5, totalLineRuntime: 42.6, totalBoxes: 14046 },
+                { shift: 'saturday_night', lineType: 'Legacy', totalLines: 6, totalLineRuntime: 46.3, totalBoxes: 20018 },
+                { shift: 'sunday_day', lineType: 'Legacy', totalLines: 6, totalLineRuntime: 47.8, totalBoxes: 15773 },
+                { shift: 'sunday_night', lineType: 'Legacy', totalLines: 11, totalLineRuntime: 97.2, totalBoxes: 32088 },
+                { shift: 'monday_day', lineType: 'Legacy', totalLines: 2, totalLineRuntime: 14.8, totalBoxes: 4896 },
+                { shift: 'monday_night', lineType: 'Legacy', totalLines: 1, totalLineRuntime: 0.2, totalBoxes: 66 },
+
+                // Flexi (Kitting)
+                { shift: 'thursday_night', lineType: 'Flexi', totalLines: 1, totalLineRuntime: 6.5, totalBoxes: 2410 },
+                { shift: 'friday_day', lineType: 'Flexi', totalLines: 2, totalLineRuntime: 18.5, totalBoxes: 8251 },
+                { shift: 'friday_night', lineType: 'Flexi', totalLines: 1, totalLineRuntime: 5.0, totalBoxes: 1864 },
+                { shift: 'saturday_night', lineType: 'Flexi', totalLines: 1, totalLineRuntime: 5.4, totalBoxes: 2003 },
+
+                // Cart Pick (Kitting)
+                { shift: 'friday_day', lineType: 'Cart Pick', totalLines: 1, totalLineRuntime: 1.1, totalBoxes: 32 },
+                { shift: 'friday_night', lineType: 'Cart Pick', totalLines: 1, totalLineRuntime: 0.1, totalBoxes: 4 },
+                { shift: 'sunday_day', lineType: 'Cart Pick', totalLines: 1, totalLineRuntime: 3.8, totalBoxes: 113 },
+                { shift: 'monday_day', lineType: 'Cart Pick', totalLines: 1, totalLineRuntime: 3.2, totalBoxes: 95 },
+                { shift: 'monday_night', lineType: 'Cart Pick', totalLines: 1, totalLineRuntime: 1.4, totalBoxes: 42 },
             ];
 
-            const lineTypeConfigs = {
-                'AUTO': { maxLines: 4, hcPerLine: 10.33, runtime: 9.25, bph: 187 }, // Line 4 is top-off, doesn't do boxes
-                '3Bay': { maxLines: 1, hcPerLine: 36, runtime: 8.98, bph: 159 },
-                'LDL': { maxLines: 1, hcPerLine: 51.8, runtime: 8.49, bph: 131 },
-                'EP': { maxLines: 1, hcPerLine: 17, runtime: 5.50, bph: 156 },
-                'KT_Flexi': { maxLines: 1, hcPerLine: 20.67, runtime: 8.98, bph: 105 },
-                'KT_HP': { maxLines: 1, hcPerLine: 15.25, runtime: 7.50, bph: 95 },
-                'Flexi': { maxLines: 1, hcPerLine: 10, runtime: 8.59, bph: 110 }
-            };
+            // Generate child rows for each parent
+            const data = realData.map(row => {
+                const lines = [];
+                const runtime = row.totalLineRuntime / row.totalLines;
+                const boxesPerLine = Math.ceil(row.totalBoxes / row.totalLines);
 
-            const data = [];
+                for (let i = 1; i <= row.totalLines; i++) {
+                    // For AUTO: Line 4 is top-off (no boxes)
+                    const isAutoTopOff = (row.lineType === 'AUTO' && i === 4);
+                    const lineBoxes = isAutoTopOff ? 0 : boxesPerLine;
+                    const lineBph = lineBoxes > 0 ? Math.ceil(lineBoxes / runtime) : 0;
 
-            shifts.forEach(shift => {
-                const lineTypes = Object.keys(lineTypeConfigs);
-                const numLineTypes = 3 + Math.floor(Math.random() * 3);
-                const selectedLineTypes = lineTypes.sort(() => 0.5 - Math.random()).slice(0, numLineTypes);
-
-                selectedLineTypes.forEach(lineType => {
-                    const config = lineTypeConfigs[lineType];
-                    const numLines = lineType === 'AUTO' ? (2 + Math.floor(Math.random() * 3)) : 1;
-
-                    const totalHcCalculated = config.hcPerLine * numLines;
-                    const hcAllocated = Math.ceil(totalHcCalculated);
-                    const totalRuntime = parseFloat((config.runtime * numLines).toFixed(2));
-
-                    // Calculate boxes per line - round up each line
-                    const boxesPerLine = Math.ceil(config.runtime * config.bph);
-
-                    const lines = [];
-                    for (let i = 1; i <= numLines; i++) {
-                        // For AUTO lines: Line 4 is top-off mod (no boxes), Lines 1-3 produce boxes
-                        const isAutoTopOff = (lineType === 'AUTO' && i === 4);
-                        const lineBoxes = isAutoTopOff ? 0 : boxesPerLine;
-
-                        const childRow = {
-                            lineId: `${lineType} Line ${i}`,
-                            hc: config.hcPerLine,
-                            runtime: config.runtime,
-                            boxes: lineBoxes,
-                            bph: isAutoTopOff ? 0 : config.bph
-                        };
-
-                        if (lineType === 'KT_Flexi' || lineType === 'KT_HP') {
-                            const bay1 = parseFloat((config.hcPerLine * 0.15).toFixed(2));
-                            const bay2 = parseFloat((config.hcPerLine * 0.35).toFixed(2));
-                            const bay3 = parseFloat((config.hcPerLine - bay1 - bay2).toFixed(2));
-                            childRow.hcBreakdown = `1Bay: ${bay1}, 2Bay: ${bay2}, 3Bay: ${bay3}`;
-                        }
-
-                        lines.push(childRow);
-                    }
-
-                    // Calculate total boxes (for AUTO, exclude Line 4 which produces 0 boxes)
-                    const totalBoxes = lineType === 'AUTO'
-                        ? boxesPerLine * (numLines - 1)
-                        : boxesPerLine * numLines;
-
-                    data.push({
-                        shift,
-                        lineType,
-                        totalLines: numLines,
-                        hcAllocated,
-                        totalLineRuntime: totalRuntime,
-                        totalBoxes,
-                        lines
+                    lines.push({
+                        lineId: `${row.lineType} Line ${i}`,
+                        hc: 0, // HC data not provided in PDFs
+                        runtime: parseFloat(runtime.toFixed(2)),
+                        boxes: lineBoxes,
+                        bph: lineBph
                     });
-                });
+                }
+
+                return {
+                    ...row,
+                    hcAllocated: 0, // HC data not provided
+                    lines
+                };
             });
 
             return data;
