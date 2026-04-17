@@ -339,7 +339,7 @@
                             HC Allocated
                             <span class="info-icon" onclick="event.stopPropagation()">
                                 i
-                                <span class="tooltip-text">HC count shows associates starting on this line. Green (+X) shows associates who moved from another line.</span>
+                                <span class="tooltip-text">HC count shows associates starting on this line. Green (🔄X) shows associates who moved from another line.</span>
                             </span>
                         </th>
                         <th class="numeric sortable" onclick="sortTable('totalLineRuntime')">Total Line Runtime (hrs)</th>
@@ -507,7 +507,7 @@
                     } else if (row.lineType === 'Legacy') {
                         // Legacy: 15 HC base + 26 from LDL
                         hcDisplay = 15;
-                        hcNote = '+26 from LDL';
+                        hcNote = '🔄26 from LDL';
                     }
                 }
 
