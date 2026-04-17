@@ -182,7 +182,7 @@
 
         .info-icon .tooltip-text {
             visibility: hidden;
-            width: 240px;
+            width: 220px;
             background-color: #1f2937;
             color: white;
             text-align: left;
@@ -193,8 +193,8 @@
             line-height: 1.4;
             position: absolute;
             z-index: 1000;
-            bottom: 125%;
-            right: -20px;
+            top: 125%;
+            right: -100px;
             opacity: 0;
             transition: opacity 0.3s;
             white-space: normal;
@@ -203,11 +203,11 @@
         .info-icon .tooltip-text::after {
             content: "";
             position: absolute;
-            top: 100%;
-            right: 25px;
+            bottom: 100%;
+            right: 105px;
             border-width: 5px;
             border-style: solid;
-            border-color: #1f2937 transparent transparent transparent;
+            border-color: transparent transparent #1f2937 transparent;
         }
 
         .info-icon:hover .tooltip-text {
