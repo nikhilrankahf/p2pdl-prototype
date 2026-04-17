@@ -282,7 +282,7 @@
                         <th class="sortable" onclick="sortTable('totalLines')">Total Lines/Teams</th>
                         <th class="numeric sortable" onclick="sortTable('hcAllocated')">HC Allocated</th>
                         <th class="numeric sortable" onclick="sortTable('totalLineRuntime')">Total Line Runtime (hrs)</th>
-                        <th class="numeric sortable" onclick="sortTable('totalBoxes')">Total Boxes</th>
+                        <th class="numeric sortable" onclick="sortTable('totalBoxes')">Total Boxes/Kits</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
@@ -501,6 +501,10 @@
                         ? `${row.hcAllocated} <span style="color: #059669; font-size: 0.85rem;">(${row.hcNote})</span>`
                         : row.hcAllocated;
 
+                    // Add "boxes" or "kits" label based on category
+                    const unitLabel = row.category === 'Assembly' ? 'boxes' : 'kits';
+                    const boxesDisplay = `${row.totalBoxes.toLocaleString()} ${unitLabel}`;
+
                     tr.innerHTML = `
                         <td>${hasMultipleLines ? `<span class="expand-icon" id="icon-${parentId}">▶</span>` : ''}</td>
                         <td>${shift.replace(/_/g, ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</td>
@@ -508,7 +512,7 @@
                         <td>${row.totalLines} ${lineLabel}</td>
                         <td class="numeric">${hcDisplayText}</td>
                         <td class="numeric">${row.totalLineRuntime.toFixed(2)}</td>
-                        <td class="numeric">${row.totalBoxes.toLocaleString()}</td>
+                        <td class="numeric">${boxesDisplay}</td>
                     `;
                     tbody.appendChild(tr);
 
@@ -520,6 +524,10 @@
                             childTr.dataset.parentId = parentId;
 
                             const emptyCell = '<td></td>';
+                            const childUnitLabel = row.category === 'Assembly' ? 'boxes' : 'kits';
+                            const childBoxesDisplay = line.boxes > 0
+                                ? `${line.boxes.toLocaleString()} ${childUnitLabel}`
+                                : '0';
 
                             if (line.hcBreakdown) {
                                 // Kitting line with bay breakdown
@@ -530,10 +538,10 @@
                                     `<td style="padding-left: 2rem; text-align: left;">${line.lineId}<br><span style="font-size: 0.75rem; color: #9ca3af;">${line.hcBreakdown}</span></td>
                                     <td class="numeric">${line.hc.toFixed(2)}</td>
                                     <td class="numeric">${line.runtime.toFixed(2)}</td>
-                                    <td class="numeric">${line.boxes.toLocaleString()}</td>`;
+                                    <td class="numeric">${childBoxesDisplay}</td>`;
                             } else {
                                 // Regular line - no BPH
-                                const bphDisplay = line.bph > 0 ? '' : '<br><span style="font-size: 0.75rem; color: #9ca3af;">Top-off (no boxes)</span>';
+                                const bphDisplay = line.bph > 0 ? '' : '<br><span style="font-size: 0.75rem; color: #9ca3af;">Top-off (no boxes/kits)</span>';
                                 childTr.innerHTML =
                                     emptyCell +
                                     emptyCell +
@@ -541,7 +549,7 @@
                                     `<td style="padding-left: 2rem; text-align: left;">${line.lineId}${bphDisplay}</td>
                                     <td class="numeric">${line.hc.toFixed(2)}</td>
                                     <td class="numeric">${line.runtime.toFixed(2)}</td>
-                                    <td class="numeric">${line.boxes.toLocaleString()}</td>`;
+                                    <td class="numeric">${childBoxesDisplay}</td>`;
                             }
                             tbody.appendChild(childTr);
                         });
