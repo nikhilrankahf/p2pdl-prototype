@@ -160,31 +160,59 @@
             color: #2d7738;
         }
 
-        .tooltip {
-            position: relative;
+        .info-icon {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            line-height: 14px;
+            text-align: center;
+            background-color: #9ca3af;
+            color: white;
+            border-radius: 50%;
+            font-size: 0.65rem;
+            font-weight: bold;
             cursor: help;
+            margin-left: 4px;
+            position: relative;
         }
 
-        .tooltip::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
+        .info-icon:hover {
+            background-color: #6b7280;
+        }
+
+        .info-icon .tooltip-text {
+            visibility: hidden;
+            width: 280px;
             background-color: #1f2937;
             color: white;
+            text-align: left;
             padding: 0.5rem 0.75rem;
             border-radius: 6px;
             font-size: 0.75rem;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s;
-            margin-bottom: 0.5rem;
+            font-weight: normal;
+            position: absolute;
             z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -140px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            white-space: normal;
         }
 
-        .tooltip:hover::after {
+        .info-icon .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #1f2937 transparent transparent transparent;
+        }
+
+        .info-icon:hover .tooltip-text {
+            visibility: visible;
             opacity: 1;
         }
 
@@ -308,7 +336,13 @@
                         <th class="sortable" onclick="sortTable('shift')">Shift</th>
                         <th class="sortable" onclick="sortTable('lineType')">Line Type</th>
                         <th class="sortable" onclick="sortTable('totalLines')">Total Lines/Teams</th>
-                        <th class="numeric sortable tooltip" onclick="sortTable('hcAllocated')" data-tooltip="HC count shows associates starting on this line. Green (+X) shows associates who moved from another line.">HC Allocated</th>
+                        <th class="numeric sortable" onclick="sortTable('hcAllocated')">
+                            HC Allocated
+                            <span class="info-icon" onclick="event.stopPropagation()">
+                                i
+                                <span class="tooltip-text">HC count shows associates starting on this line. Green (+X) shows associates who moved from another line.</span>
+                            </span>
+                        </th>
                         <th class="numeric sortable" onclick="sortTable('totalLineRuntime')">Total Line Runtime (hrs)</th>
                         <th class="numeric sortable" onclick="sortTable('totalBoxes')">Total Boxes/Kits</th>
                     </tr>
