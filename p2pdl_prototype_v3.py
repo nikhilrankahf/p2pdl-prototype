@@ -552,6 +552,24 @@ if st.session_state.mode == 'Production':
     with col4:
         st.markdown('<div class="metric-container"><div style="color: #6b7280; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.5rem;">Completed</div><div style="font-size: 2rem; font-weight: bold; color: #111827;">66,592</div></div>', unsafe_allow_html=True)
 
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Line Allocation Table
+    st.markdown("### Line Allocation Table")
+    import streamlit.components.v1 as components
+
+    # Read the HTML file
+    try:
+        with open('line_allocation_table_prototype_fixed.html', 'r') as f:
+            html_content = f.read()
+
+        # Display the HTML
+        components.html(html_content, height=900, scrolling=True)
+    except FileNotFoundError:
+        st.info("Line allocation table prototype not found. Please ensure line_allocation_table_prototype_fixed.html is in the repository.")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
 else:  # Simulation mode
     # Show promotion success message if flag is set
     if st.session_state.show_promotion_message:
