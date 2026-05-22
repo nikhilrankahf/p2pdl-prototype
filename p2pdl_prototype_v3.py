@@ -560,8 +560,8 @@ if st.session_state.current_tab == 'Configuration':
             for idx, row in df.iterrows():
                 shift = row['Shift']
                 for box_type in BOX_TYPES:
-                    two_p = row[f'{box_type}-2P %']
-                    four_p = row[f'{box_type}-4P %']
+                    two_p = row[f'2P-{box_type} %']
+                    four_p = row[f'4P-{box_type} %']
                     if abs((two_p + four_p) - 100) > 0.01:  # Allow small floating point errors
                         errors.append(f"{shift} - {box_type}: {two_p}% + {four_p}% ≠ 100%")
             return errors
@@ -573,8 +573,8 @@ if st.session_state.current_tab == 'Configuration':
             for shift in SHIFTS:
                 row = {'Shift': shift}
                 for box_type in BOX_TYPES:
-                    row[f'{box_type}-2P %'] = st.session_state.box_split_config[process_path][shift][box_type]['2P']
-                    row[f'{box_type}-4P %'] = st.session_state.box_split_config[process_path][shift][box_type]['4P']
+                    row[f'2P-{box_type} %'] = st.session_state.box_split_config[process_path][shift][box_type]['2P']
+                    row[f'4P-{box_type} %'] = st.session_state.box_split_config[process_path][shift][box_type]['4P']
                 data.append(row)
 
             return pd.DataFrame(data)
@@ -583,8 +583,8 @@ if st.session_state.current_tab == 'Configuration':
             """Copy first row values to all other shifts"""
             for shift in SHIFTS:
                 for box_type in BOX_TYPES:
-                    st.session_state.box_split_config[process_path][shift][box_type]['2P'] = first_row_values[f'{box_type}-2P %']
-                    st.session_state.box_split_config[process_path][shift][box_type]['4P'] = first_row_values[f'{box_type}-4P %']
+                    st.session_state.box_split_config[process_path][shift][box_type]['2P'] = first_row_values[f'2P-{box_type} %']
+                    st.session_state.box_split_config[process_path][shift][box_type]['4P'] = first_row_values[f'4P-{box_type} %']
             st.session_state.box_split_modified = True
 
         def reset_to_defaults(process_path):
@@ -600,8 +600,8 @@ if st.session_state.current_tab == 'Configuration':
             for idx, row in edited_df.iterrows():
                 shift = row['Shift']
                 for box_type in BOX_TYPES:
-                    st.session_state.box_split_config[process_path][shift][box_type]['2P'] = row[f'{box_type}-2P %']
-                    st.session_state.box_split_config[process_path][shift][box_type]['4P'] = row[f'{box_type}-4P %']
+                    st.session_state.box_split_config[process_path][shift][box_type]['2P'] = row[f'2P-{box_type} %']
+                    st.session_state.box_split_config[process_path][shift][box_type]['4P'] = row[f'4P-{box_type} %']
             st.session_state.box_split_modified = True
 
         # Auto tab
@@ -609,7 +609,7 @@ if st.session_state.current_tab == 'Configuration':
             st.markdown("**Auto Process Path**")
 
             # Bulk actions
-            col1, col2, col3 = st.columns(3)
+            col1, col2 = st.columns(2)
             with col1:
                 if st.button("📋 Apply First Row to All Shifts", key="auto_apply_all", use_container_width=True):
                     df = create_split_table('Auto')
@@ -620,8 +620,6 @@ if st.session_state.current_tab == 'Configuration':
                 if st.button("🔄 Reset to Defaults (75/25)", key="auto_reset", use_container_width=True):
                     reset_to_defaults('Auto')
                     st.rerun()
-            with col3:
-                st.button("📥 Copy from Previous Week", key="auto_copy_prev", use_container_width=True, disabled=True)
 
             st.markdown("<br>", unsafe_allow_html=True)
 
@@ -632,12 +630,12 @@ if st.session_state.current_tab == 'Configuration':
                 auto_df,
                 column_config={
                     "Shift": st.column_config.TextColumn("Shift", width="large", disabled=True),
-                    "M-2P %": st.column_config.NumberColumn("M-2P %", min_value=0, max_value=100, step=1, format="%.0f"),
-                    "M-4P %": st.column_config.NumberColumn("M-4P %", min_value=0, max_value=100, step=1, format="%.0f"),
-                    "G-2P %": st.column_config.NumberColumn("G-2P %", min_value=0, max_value=100, step=1, format="%.0f"),
-                    "G-4P %": st.column_config.NumberColumn("G-4P %", min_value=0, max_value=100, step=1, format="%.0f"),
-                    "T-2P %": st.column_config.NumberColumn("T-2P %", min_value=0, max_value=100, step=1, format="%.0f"),
-                    "T-4P %": st.column_config.NumberColumn("T-4P %", min_value=0, max_value=100, step=1, format="%.0f"),
+                    "2P-M %": st.column_config.NumberColumn("2P-M %", min_value=0, max_value=100, step=1, format="%.0f"),
+                    "4P-M %": st.column_config.NumberColumn("4P-M %", min_value=0, max_value=100, step=1, format="%.0f"),
+                    "2P-G %": st.column_config.NumberColumn("2P-G %", min_value=0, max_value=100, step=1, format="%.0f"),
+                    "4P-G %": st.column_config.NumberColumn("4P-G %", min_value=0, max_value=100, step=1, format="%.0f"),
+                    "2P-T %": st.column_config.NumberColumn("2P-T %", min_value=0, max_value=100, step=1, format="%.0f"),
+                    "4P-T %": st.column_config.NumberColumn("4P-T %", min_value=0, max_value=100, step=1, format="%.0f"),
                 },
                 hide_index=True,
                 use_container_width=True,
@@ -659,7 +657,7 @@ if st.session_state.current_tab == 'Configuration':
             st.markdown("**LDL Process Path**")
 
             # Bulk actions
-            col1, col2, col3 = st.columns(3)
+            col1, col2 = st.columns(2)
             with col1:
                 if st.button("📋 Apply First Row to All Shifts", key="ldl_apply_all", use_container_width=True):
                     df = create_split_table('LDL')
@@ -670,8 +668,6 @@ if st.session_state.current_tab == 'Configuration':
                 if st.button("🔄 Reset to Defaults (75/25)", key="ldl_reset", use_container_width=True):
                     reset_to_defaults('LDL')
                     st.rerun()
-            with col3:
-                st.button("📥 Copy from Previous Week", key="ldl_copy_prev", use_container_width=True, disabled=True)
 
             st.markdown("<br>", unsafe_allow_html=True)
 
@@ -682,12 +678,12 @@ if st.session_state.current_tab == 'Configuration':
                 ldl_df,
                 column_config={
                     "Shift": st.column_config.TextColumn("Shift", width="large", disabled=True),
-                    "M-2P %": st.column_config.NumberColumn("M-2P %", min_value=0, max_value=100, step=1, format="%.0f"),
-                    "M-4P %": st.column_config.NumberColumn("M-4P %", min_value=0, max_value=100, step=1, format="%.0f"),
-                    "G-2P %": st.column_config.NumberColumn("G-2P %", min_value=0, max_value=100, step=1, format="%.0f"),
-                    "G-4P %": st.column_config.NumberColumn("G-4P %", min_value=0, max_value=100, step=1, format="%.0f"),
-                    "T-2P %": st.column_config.NumberColumn("T-2P %", min_value=0, max_value=100, step=1, format="%.0f"),
-                    "T-4P %": st.column_config.NumberColumn("T-4P %", min_value=0, max_value=100, step=1, format="%.0f"),
+                    "2P-M %": st.column_config.NumberColumn("2P-M %", min_value=0, max_value=100, step=1, format="%.0f"),
+                    "4P-M %": st.column_config.NumberColumn("4P-M %", min_value=0, max_value=100, step=1, format="%.0f"),
+                    "2P-G %": st.column_config.NumberColumn("2P-G %", min_value=0, max_value=100, step=1, format="%.0f"),
+                    "4P-G %": st.column_config.NumberColumn("4P-G %", min_value=0, max_value=100, step=1, format="%.0f"),
+                    "2P-T %": st.column_config.NumberColumn("2P-T %", min_value=0, max_value=100, step=1, format="%.0f"),
+                    "4P-T %": st.column_config.NumberColumn("4P-T %", min_value=0, max_value=100, step=1, format="%.0f"),
                 },
                 hide_index=True,
                 use_container_width=True,
@@ -709,7 +705,7 @@ if st.session_state.current_tab == 'Configuration':
             st.markdown("**Manual Lines Process Path**")
 
             # Bulk actions
-            col1, col2, col3 = st.columns(3)
+            col1, col2 = st.columns(2)
             with col1:
                 if st.button("📋 Apply First Row to All Shifts", key="manual_apply_all", use_container_width=True):
                     df = create_split_table('Manual Lines')
@@ -720,8 +716,6 @@ if st.session_state.current_tab == 'Configuration':
                 if st.button("🔄 Reset to Defaults (75/25)", key="manual_reset", use_container_width=True):
                     reset_to_defaults('Manual Lines')
                     st.rerun()
-            with col3:
-                st.button("📥 Copy from Previous Week", key="manual_copy_prev", use_container_width=True, disabled=True)
 
             st.markdown("<br>", unsafe_allow_html=True)
 
@@ -732,12 +726,12 @@ if st.session_state.current_tab == 'Configuration':
                 manual_df,
                 column_config={
                     "Shift": st.column_config.TextColumn("Shift", width="large", disabled=True),
-                    "M-2P %": st.column_config.NumberColumn("M-2P %", min_value=0, max_value=100, step=1, format="%.0f"),
-                    "M-4P %": st.column_config.NumberColumn("M-4P %", min_value=0, max_value=100, step=1, format="%.0f"),
-                    "G-2P %": st.column_config.NumberColumn("G-2P %", min_value=0, max_value=100, step=1, format="%.0f"),
-                    "G-4P %": st.column_config.NumberColumn("G-4P %", min_value=0, max_value=100, step=1, format="%.0f"),
-                    "T-2P %": st.column_config.NumberColumn("T-2P %", min_value=0, max_value=100, step=1, format="%.0f"),
-                    "T-4P %": st.column_config.NumberColumn("T-4P %", min_value=0, max_value=100, step=1, format="%.0f"),
+                    "2P-M %": st.column_config.NumberColumn("2P-M %", min_value=0, max_value=100, step=1, format="%.0f"),
+                    "4P-M %": st.column_config.NumberColumn("4P-M %", min_value=0, max_value=100, step=1, format="%.0f"),
+                    "2P-G %": st.column_config.NumberColumn("2P-G %", min_value=0, max_value=100, step=1, format="%.0f"),
+                    "4P-G %": st.column_config.NumberColumn("4P-G %", min_value=0, max_value=100, step=1, format="%.0f"),
+                    "2P-T %": st.column_config.NumberColumn("2P-T %", min_value=0, max_value=100, step=1, format="%.0f"),
+                    "4P-T %": st.column_config.NumberColumn("4P-T %", min_value=0, max_value=100, step=1, format="%.0f"),
                 },
                 hide_index=True,
                 use_container_width=True,
