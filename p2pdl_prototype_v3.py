@@ -9,9 +9,14 @@ st.set_page_config(page_title="Riptide v2 - P2PDL Prototype", layout="wide")
 st.markdown("""
 <style>
     .block-container {
-        padding-top: 0rem;
+        padding-top: 1rem;
         padding-left: 2rem;
         padding-right: 2rem;
+    }
+
+    /* Push main content below Streamlit header */
+    .main > div {
+        padding-top: 2rem;
     }
 
     /* Simulation banner */
@@ -262,8 +267,8 @@ def generate_lane_data():
 
 df_lanes = generate_lane_data()
 
-# Header
-st.markdown('<div style="background: linear-gradient(135deg, #1f2937 0%, #111827 100%); padding: 0.75rem 2rem; margin: -1rem -2rem 0 -2rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);"></div>', unsafe_allow_html=True)
+# Header - add spacing to avoid Streamlit header overlap
+st.markdown('<div style="height: 1rem;"></div>', unsafe_allow_html=True)
 
 col1, col2, col3, col4, col5, col6, col7, col8 = st.columns([1.5, 1.3, 1.3, 1.5, 2.9, 1, 1.5, 1.5])
 
