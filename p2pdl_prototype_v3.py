@@ -211,7 +211,7 @@ SHIFTS = [
     'Wednesday 2 Day', 'Wednesday 2 Night'
 ]
 
-PROCESS_PATHS = ['Auto', 'LDL', 'Manual Lines']
+PROCESS_PATHS = ['Auto', 'LDL', 'Manual Line', 'Grocery Line']
 BOX_TYPES = ['M', 'G', 'T']
 
 def initialize_box_split_config():
@@ -550,14 +550,13 @@ if st.session_state.show_config_modal:
 # ============================================================================
 if st.session_state.current_tab == 'Configuration':
     st.markdown("# Configuration")
-    st.caption("DC: AZ - Week: 2026-W22")
     st.markdown("---")
 
-    with st.expander("🔲 Process Path Box Splits", expanded=True):
+    with st.expander("🔲 Assembly Process Path Box Splits", expanded=True):
         st.markdown("Configure target box-type split percentages by process path to match operational mod configuration. The solver will use these as preferences when allocating boxes.")
 
         # Process path selector tabs
-        path_tab1, path_tab2, path_tab3 = st.tabs(["Auto", "LDL", "Manual Lines"])
+        path_tab1, path_tab2, path_tab3, path_tab4 = st.tabs(["Auto", "LDL", "Manual Line", "Grocery Line"])
 
         def validate_splits(df):
             """Validate that 2P + 4P = 100% for each box type in each row"""
@@ -611,7 +610,7 @@ if st.session_state.current_tab == 'Configuration':
 
         # Auto tab
         with path_tab1:
-            st.markdown("**Auto Process Path**")
+            st.markdown("**Auto**")
 
             # Bulk actions
             col1, col2 = st.columns(2)
@@ -659,7 +658,7 @@ if st.session_state.current_tab == 'Configuration':
 
         # LDL tab
         with path_tab2:
-            st.markdown("**LDL Process Path**")
+            st.markdown("**LDL**")
 
             # Bulk actions
             col1, col2 = st.columns(2)
@@ -705,27 +704,27 @@ if st.session_state.current_tab == 'Configuration':
             if ldl_errors:
                 st.markdown('<div class="error-box"><strong>⚠️ Validation Errors:</strong><br>' + '<br>'.join(ldl_errors) + '</div>', unsafe_allow_html=True)
 
-        # Manual Lines tab
+        # Manual Line tab
         with path_tab3:
-            st.markdown("**Manual Lines Process Path**")
+            st.markdown("**Manual Line**")
 
             # Bulk actions
             col1, col2 = st.columns(2)
             with col1:
                 if st.button("📋 Apply First Row to All Shifts", key="manual_apply_all", use_container_width=True):
-                    df = create_split_table('Manual Lines')
+                    df = create_split_table('Manual Line')
                     first_row = df.iloc[0].to_dict()
-                    apply_to_all_shifts('Manual Lines', first_row)
+                    apply_to_all_shifts('Manual Line', first_row)
                     st.rerun()
             with col2:
                 if st.button("🔄 Reset to Defaults (75/25)", key="manual_reset", use_container_width=True):
-                    reset_to_defaults('Manual Lines')
+                    reset_to_defaults('Manual Line')
                     st.rerun()
 
             st.markdown("<br>", unsafe_allow_html=True)
 
             # Create and display table
-            manual_df = create_split_table('Manual Lines')
+            manual_df = create_split_table('Manual Line')
 
             edited_manual_df = st.data_editor(
                 manual_df,
@@ -746,12 +745,60 @@ if st.session_state.current_tab == 'Configuration':
 
             # Update config from edited dataframe
             if not edited_manual_df.equals(manual_df):
-                update_config_from_df('Manual Lines', edited_manual_df)
+                update_config_from_df('Manual Line', edited_manual_df)
 
             # Validate
             manual_errors = validate_splits(edited_manual_df)
             if manual_errors:
                 st.markdown('<div class="error-box"><strong>⚠️ Validation Errors:</strong><br>' + '<br>'.join(manual_errors) + '</div>', unsafe_allow_html=True)
+
+        # Grocery Line tab
+        with path_tab4:
+            st.markdown("**Grocery Line**")
+
+            # Bulk actions
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("📋 Apply First Row to All Shifts", key="grocery_apply_all", use_container_width=True):
+                    df = create_split_table('Grocery Line')
+                    first_row = df.iloc[0].to_dict()
+                    apply_to_all_shifts('Grocery Line', first_row)
+                    st.rerun()
+            with col2:
+                if st.button("🔄 Reset to Defaults (75/25)", key="grocery_reset", use_container_width=True):
+                    reset_to_defaults('Grocery Line')
+                    st.rerun()
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            # Create and display table
+            grocery_df = create_split_table('Grocery Line')
+
+            edited_grocery_df = st.data_editor(
+                grocery_df,
+                column_config={
+                    "Shift": st.column_config.TextColumn("Shift", width="large", disabled=True),
+                    "2P-M %": st.column_config.NumberColumn("2P-M %", min_value=0, max_value=100, step=1, format="%.0f"),
+                    "4P-M %": st.column_config.NumberColumn("4P-M %", min_value=0, max_value=100, step=1, format="%.0f"),
+                    "2P-G %": st.column_config.NumberColumn("2P-G %", min_value=0, max_value=100, step=1, format="%.0f"),
+                    "4P-G %": st.column_config.NumberColumn("4P-G %", min_value=0, max_value=100, step=1, format="%.0f"),
+                    "2P-T %": st.column_config.NumberColumn("2P-T %", min_value=0, max_value=100, step=1, format="%.0f"),
+                    "4P-T %": st.column_config.NumberColumn("4P-T %", min_value=0, max_value=100, step=1, format="%.0f"),
+                },
+                hide_index=True,
+                use_container_width=True,
+                height=600,
+                key="grocery_editor"
+            )
+
+            # Update config from edited dataframe
+            if not edited_grocery_df.equals(grocery_df):
+                update_config_from_df('Grocery Line', edited_grocery_df)
+
+            # Validate
+            grocery_errors = validate_splits(edited_grocery_df)
+            if grocery_errors:
+                st.markdown('<div class="error-box"><strong>⚠️ Validation Errors:</strong><br>' + '<br>'.join(grocery_errors) + '</div>', unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
