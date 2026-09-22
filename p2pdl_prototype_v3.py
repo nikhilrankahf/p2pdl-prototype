@@ -221,26 +221,25 @@ st.markdown("""
         opacity: 1 !important;
     }
 
-    /* ===== Batching multiselect: wrap chips onto multiple lines ===== */
-    [data-testid="stMultiSelect"] [data-baseweb="select"] > div {
+    /* ===== Multiselect: wrap chips onto multiple lines instead of clipping ===== */
+    div[data-baseweb="select"] > div {
         height: auto !important;
         min-height: 2.5rem;
         overflow: visible !important;
         flex-wrap: wrap !important;
     }
-    /* the value container that actually holds the chips */
-    [data-testid="stMultiSelect"] [data-baseweb="select"] > div > div:first-child {
+    div[data-baseweb="select"] > div > div {
         flex-wrap: wrap !important;
         height: auto !important;
+        overflow: visible !important;
     }
-    /* ===== Batching multiselect chips (green) ===== */
-    [data-testid="stMultiSelect"] [data-baseweb="tag"] {
-        background-color: #7cb342 !important;
+    /* ===== Multiselect chips (HF green) ===== */
+    span[data-baseweb="tag"] {
+        background-color: #91C11E !important;
     }
-    [data-testid="stMultiSelect"] [data-baseweb="tag"] span {
+    span[data-baseweb="tag"] span,
+    span[data-baseweb="tag"] svg {
         color: #ffffff !important;
-    }
-    [data-testid="stMultiSelect"] [data-baseweb="tag"] svg {
         fill: #ffffff !important;
     }
 </style>

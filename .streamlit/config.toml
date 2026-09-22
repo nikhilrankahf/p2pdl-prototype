@@ -1,0 +1,5 @@
+[theme]
+# HelloFresh brand accent (classic HF green) — tints widget accents such as
+# multiselect chips and active states. Without this, Streamlit Cloud uses the
+# default red primaryColor.
+primaryColor = "#91C11E"
