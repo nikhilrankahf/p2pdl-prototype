@@ -221,14 +221,26 @@ st.markdown("""
         opacity: 1 !important;
     }
 
+    /* ===== Batching multiselect: wrap chips onto multiple lines ===== */
+    [data-testid="stMultiSelect"] [data-baseweb="select"] > div {
+        height: auto !important;
+        min-height: 2.5rem;
+        overflow: visible !important;
+        flex-wrap: wrap !important;
+    }
+    /* the value container that actually holds the chips */
+    [data-testid="stMultiSelect"] [data-baseweb="select"] > div > div:first-child {
+        flex-wrap: wrap !important;
+        height: auto !important;
+    }
     /* ===== Batching multiselect chips (green) ===== */
-    [data-testid="stMultiSelect"] span[data-baseweb="tag"] {
+    [data-testid="stMultiSelect"] [data-baseweb="tag"] {
         background-color: #7cb342 !important;
     }
-    [data-testid="stMultiSelect"] span[data-baseweb="tag"] span {
+    [data-testid="stMultiSelect"] [data-baseweb="tag"] span {
         color: #ffffff !important;
     }
-    [data-testid="stMultiSelect"] span[data-baseweb="tag"] svg {
+    [data-testid="stMultiSelect"] [data-baseweb="tag"] svg {
         fill: #ffffff !important;
     }
 </style>
@@ -701,8 +713,6 @@ def render_batching_tab():
                     options=BATCH_ATTR_OPTIONS,
                     default=cfg[lt],
                     key=f"batch_ms_{lt}",
-                    help="Attributes that define a batch for this line type. Chips appear in the order you "
-                         "add them — that is the attribute order in the batch_name.",
                 )
                 cfg[lt] = sel
                 st.caption("Example batch_name:")
