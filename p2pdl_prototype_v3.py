@@ -171,6 +171,66 @@ st.markdown("""
     .stButton > button[data-testid="baseButton-secondary"]:hover {
         background-color: #e5e7eb !important;
     }
+
+    /* ===== Sidebar (dark navigation) ===== */
+    [data-testid="stSidebar"] {
+        background-color: #131a2a;
+    }
+    [data-testid="stSidebar"] .stButton > button {
+        background-color: transparent !important;
+        color: #cbd5e1 !important;
+        border: none !important;
+        text-align: left !important;
+        justify-content: flex-start !important;
+        font-weight: 500;
+        padding: 0.5rem 0.75rem !important;
+        border-radius: 8px;
+        box-shadow: none !important;
+    }
+    [data-testid="stSidebar"] .stButton > button:hover {
+        background-color: #1e293b !important;
+        color: #ffffff !important;
+    }
+    /* active nav item is rendered as a disabled button */
+    [data-testid="stSidebar"] .stButton > button:disabled {
+        background-color: #22c55e !important;
+        color: #ffffff !important;
+        opacity: 1 !important;
+    }
+
+    /* ===== Settings sub-tab bar (buttons styled as underline tabs) ===== */
+    .st-key-subtab_plan button, .st-key-subtab_az button, .st-key-subtab_batch button {
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        border-bottom: 2px solid transparent !important;
+        color: #6b7280 !important;
+        font-weight: 500 !important;
+        box-shadow: none !important;
+        padding: 0.5rem 0.25rem !important;
+    }
+    .st-key-subtab_plan button:hover, .st-key-subtab_az button:hover, .st-key-subtab_batch button:hover {
+        color: #111827 !important;
+        background: transparent !important;
+    }
+    /* active sub-tab is rendered as a disabled button */
+    .st-key-subtab_plan button:disabled, .st-key-subtab_az button:disabled, .st-key-subtab_batch button:disabled {
+        color: #111827 !important;
+        border-bottom: 2px solid #22c55e !important;
+        font-weight: 600 !important;
+        opacity: 1 !important;
+    }
+
+    /* ===== Batching multiselect chips (green) ===== */
+    [data-testid="stMultiSelect"] span[data-baseweb="tag"] {
+        background-color: #7cb342 !important;
+    }
+    [data-testid="stMultiSelect"] span[data-baseweb="tag"] span {
+        color: #ffffff !important;
+    }
+    [data-testid="stMultiSelect"] span[data-baseweb="tag"] svg {
+        fill: #ffffff !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -198,6 +258,14 @@ if 'box_split_saved' not in st.session_state:
     st.session_state.box_split_saved = {}
 if 'box_split_modified' not in st.session_state:
     st.session_state.box_split_modified = False
+if 'settings_subtab' not in st.session_state:
+    st.session_state.settings_subtab = 'Plan Configuration'
+if 'batch_config' not in st.session_state:
+    st.session_state.batch_config = {}
+if 'batch_config_saved' not in st.session_state:
+    st.session_state.batch_config_saved = {}
+if 'batch_modified' not in st.session_state:
+    st.session_state.batch_modified = False
 
 # Default shifts
 SHIFTS = [
@@ -267,48 +335,72 @@ def generate_lane_data():
 
 df_lanes = generate_lane_data()
 
-# Header - add spacing to avoid Streamlit header overlap
-st.markdown('<div style="height: 2.5rem;"></div>', unsafe_allow_html=True)
+# ============================================================================
+# SIDEBAR NAVIGATION
+# ============================================================================
+with st.sidebar:
+    st.markdown('<div style="font-size: 1.35rem; font-weight: 800; color: #ffffff; padding: 0.5rem 0 1.25rem 0;">⚡ Riptide</div>', unsafe_allow_html=True)
 
-col1, col2, col3, col4, col5, col6, col7, col8 = st.columns([1.5, 1.3, 1.3, 1.5, 2.9, 1, 1.5, 1.5])
+    # (label, icon, available in this prototype)
+    NAV_ITEMS = [
+        ("Planning", "📦", True),
+        ("Kitting", "🏭", False),
+        ("Export", "⬇️", False),
+        ("Settings", "⚙️", True),
+        ("Admin", "🛡️", False),
+    ]
+    for name, icon, enabled in NAV_ITEMS:
+        is_active = (st.session_state.current_tab == name)
+        if st.button(f"{icon}  {name}", key=f"nav_{name}", use_container_width=True, disabled=is_active):
+            if enabled:
+                st.session_state.current_tab = name
+                st.rerun()
+            else:
+                st.toast(f"{name} is not available in this prototype.", icon="🔒")
 
-with col1:
-    st.markdown('<p style="font-size: 1.2rem; font-weight: 700; color: #111827; margin: 0.5rem 0;">⚡ Riptide</p>', unsafe_allow_html=True)
+    # Spacer pushes the profile block toward the bottom
+    st.markdown('<div style="height: 32vh;"></div>', unsafe_allow_html=True)
+    st.markdown('<hr style="border: none; border-top: 1px solid #334155; margin: 0.5rem 0;">', unsafe_allow_html=True)
+    st.markdown("""
+    <div style="display: flex; align-items: center; gap: 0.6rem; padding: 0.25rem 0;">
+        <div style="width: 34px; height: 34px; border-radius: 50%; background: #22c55e; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700;">NR</div>
+        <div>
+            <div style="color: #fff; font-weight: 600; font-size: 0.9rem;">Nikhil Ranka</div>
+            <div style="color: #94a3b8; font-size: 0.75rem;">Admin</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-with col2:
-    if st.button("📦 Planning", disabled=(st.session_state.current_tab == 'Planning'), use_container_width=True, key="planning_tab"):
-        st.session_state.current_tab = 'Planning'
-        st.rerun()
+# ============================================================================
+# TOP BAR (page title + DC / Week / Mode + theme toggle)
+# ============================================================================
+st.markdown('<div style="height: 0.5rem;"></div>', unsafe_allow_html=True)
+tb1, tb2, tb3, tb4, tb5 = st.columns([4, 1.3, 1.5, 1.6, 0.6])
 
-with col3:
-    if st.button("🏭 Kitting", disabled=True, use_container_width=True, type="secondary", key="kitting_tab"):
-        st.session_state.current_tab = 'Kitting'
-        st.rerun()
+with tb1:
+    st.markdown(f'<p style="font-size: 1.3rem; font-weight: 700; color: #111827; margin: 0.4rem 0;">{st.session_state.current_tab}</p>', unsafe_allow_html=True)
 
-with col4:
-    if st.button("⚙️ Configuration", disabled=(st.session_state.current_tab == 'Configuration'), use_container_width=True, key="config_tab"):
-        st.session_state.current_tab = 'Configuration'
-        st.rerun()
+with tb2:
+    st.selectbox("DC", options=['AZ'], index=0, key='dc_selector', disabled=True)
 
-with col6:
-    st.selectbox("DC", options=['AZ'], index=0, key='dc_selector', label_visibility='visible', disabled=True)
+with tb3:
+    st.selectbox("Week", options=['2026-W40'], index=0, key='week_selector', disabled=True)
 
-with col7:
-    st.selectbox("Week", options=['2026-W22'], index=0, key='week_selector', label_visibility='visible', disabled=True)
-
-with col8:
+with tb4:
     mode_selection = st.selectbox(
         "Mode",
         options=['Production', 'Simulation'],
         index=0 if st.session_state.mode == 'Production' else 1,
         key='mode_selector',
-        label_visibility='visible'
     )
     if mode_selection != st.session_state.mode:
         st.session_state.mode = mode_selection
         st.rerun()
 
-st.markdown('<hr style="margin: 1rem -2rem; border: none; border-top: 1px solid #e5e7eb;">', unsafe_allow_html=True)
+with tb5:
+    st.markdown('<div style="text-align: center; font-size: 1.4rem; padding-top: 1.9rem;">☀️</div>', unsafe_allow_html=True)
+
+st.markdown('<hr style="margin: 0.75rem -2rem 1rem -2rem; border: none; border-top: 1px solid #e5e7eb;">', unsafe_allow_html=True)
 
 # Simulation mode banner
 if st.session_state.mode == 'Simulation':
@@ -318,7 +410,7 @@ if st.session_state.mode == 'Simulation':
 # Configuration Modal Function
 @st.dialog("Simulation: Configuration", width="large")
 def show_configuration():
-    st.caption("DC: AZ - Week: 2026-W22")
+    st.caption("DC: AZ - Week: 2026-W40")
     st.markdown("---")
 
     # Mode-specific messaging
@@ -546,11 +638,160 @@ if st.session_state.show_config_modal:
 
 
 # ============================================================================
-# CONFIGURATION TAB
+# BATCHING CONFIG (USFPT-4342) — Admin UI for configurable batching levers
 # ============================================================================
-if st.session_state.current_tab == 'Configuration':
-    st.markdown("# Configuration")
-    st.markdown("---")
+# Line types and the box attributes selectable as batch-defining grouping keys.
+# week is always the batch_name prefix, so it isn't a selectable attribute.
+BATCH_LINE_TYPES = ['Auto', 'LDL', 'EP']
+BATCH_ATTR_OPTIONS = ['week', 'pack_day', 'lane', 'bag_size', 'liner_size', 'liner_type', 'box_type', 'suffix']
+
+# Defaults per USFPT-4236: week leads every batch_name; Auto = full set;
+# LDL = full set minus bag_size & box_type.
+BATCH_DEFAULTS = {
+    'Auto': ['week', 'pack_day', 'lane', 'bag_size', 'liner_size', 'liner_type', 'box_type'],
+    'LDL':  ['week', 'pack_day', 'lane', 'liner_size', 'liner_type'],
+    'EP':   ['week', 'pack_day', 'lane', 'bag_size', 'liner_size', 'liner_type'],
+}
+
+# Representative token values for the example batch_name preview.
+BATCH_SAMPLE_TOKENS = {
+    'week': 'W40', 'pack_day': 'FR', 'lane': 'AZ_JITSU-SALCA', 'bag_size': '2p',
+    'liner_size': 'M', 'liner_type': 'SUM', 'box_type': 'CORE', 'suffix': '01',
+}
+
+
+def _default_batch_config():
+    """Fresh config: {line_type: [ordered active attributes]} from the USFPT-4236 defaults."""
+    return {lt: list(BATCH_DEFAULTS[lt]) for lt in BATCH_LINE_TYPES}
+
+
+def _example_batch_name(attrs):
+    """Sample batch_name = one token per active attribute, in selection order."""
+    return "_".join([BATCH_SAMPLE_TOKENS[a] for a in attrs]) if attrs else "—"
+
+
+def _batch_is_modified():
+    cfg, saved = st.session_state.batch_config, st.session_state.batch_config_saved
+    return any(cfg[lt] != saved[lt] for lt in BATCH_LINE_TYPES)
+
+
+# Seed the batching config on first load.
+if not st.session_state.batch_config:
+    st.session_state.batch_config = _default_batch_config()
+    st.session_state.batch_config_saved = _default_batch_config()
+
+
+def render_batching_tab():
+    cfg = st.session_state.batch_config
+
+    st.markdown("### Batching")
+    st.caption("Set which box attributes define a batch for each line type. Boxes sharing the same values "
+               "across all selected attributes (within a line type) form one batch. Chips appear in selection "
+               "order — that is the attribute order in the batch_name.")
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # One multiselect per line type, laid out 3 per row (matches the portal layout).
+    for start in range(0, len(BATCH_LINE_TYPES), 3):
+        row_types = BATCH_LINE_TYPES[start:start + 3]
+        cols = st.columns(3)
+        for lt, col in zip(row_types, cols):
+            with col:
+                sel = st.multiselect(
+                    lt.upper(),
+                    options=BATCH_ATTR_OPTIONS,
+                    default=cfg[lt],
+                    key=f"batch_ms_{lt}",
+                    help="Attributes that define a batch for this line type. Chips appear in the order you "
+                         "add them — that is the attribute order in the batch_name.",
+                )
+                cfg[lt] = sel
+                st.caption("Example batch_name:")
+                st.code(_example_batch_name(sel), language=None)
+
+    # Refresh the unsaved indicator if any selection changed the config.
+    new_modified = _batch_is_modified()
+    if new_modified != st.session_state.batch_modified:
+        st.session_state.batch_modified = new_modified
+        st.rerun()
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Reset to the USFPT-4236 defaults.
+    rc1, rc2 = st.columns([1.5, 6])
+    with rc1:
+        if st.button("🔄 Reset to Defaults", key="batch_reset", use_container_width=True):
+            st.session_state.batch_config = _default_batch_config()
+            for lt in BATCH_LINE_TYPES:
+                st.session_state.pop(f"batch_ms_{lt}", None)  # clear widget state so defaults re-apply
+            st.session_state.batch_modified = _batch_is_modified()
+            st.rerun()
+
+
+# ============================================================================
+# SETTINGS TAB
+# ============================================================================
+if st.session_state.current_tab == 'Settings':
+    # Settings sub-tabs (clickable) — Plan Configuration | Affinity Zones | Batching,
+    # with the unsaved indicator + Save button pinned to the right of the same row.
+    SETTINGS_SUBTABS = [('Plan Configuration', 'subtab_plan'),
+                        ('Affinity Zones', 'subtab_az'),
+                        ('Batching', 'subtab_batch')]
+    _active_subtab = st.session_state.settings_subtab
+    if _active_subtab == 'Batching':
+        _subtab_modified = st.session_state.batch_modified
+    elif _active_subtab == 'Plan Configuration':
+        _subtab_modified = st.session_state.box_split_modified
+    else:  # Affinity Zones — no editable config yet
+        _subtab_modified = False
+
+    stc = st.columns([1.5, 1.3, 1.0, 2.2, 1.4, 1.6], vertical_alignment="center")
+    for (name, key), col in zip(SETTINGS_SUBTABS, stc[:3]):
+        with col:
+            if st.button(name, key=key, use_container_width=True,
+                         disabled=(st.session_state.settings_subtab == name)):
+                st.session_state.settings_subtab = name
+                st.rerun()
+    with stc[4]:
+        if _subtab_modified:
+            st.markdown('<div style="text-align:right;color:#f59e0b;font-size:0.85rem;font-weight:600;">● Unsaved changes</div>', unsafe_allow_html=True)
+        else:
+            st.markdown('<div style="text-align:right;color:#9ca3af;font-size:0.85rem;">● No changes to save</div>', unsafe_allow_html=True)
+    with stc[5]:
+        if st.button("💾 Save Configuration", type="primary", use_container_width=True,
+                     disabled=not _subtab_modified, key="settings_save"):
+            if _active_subtab == 'Batching':
+                st.session_state.batch_config_saved = {lt: list(st.session_state.batch_config[lt]) for lt in BATCH_LINE_TYPES}
+                st.session_state.batch_modified = False
+            elif _active_subtab == 'Plan Configuration':
+                st.session_state.box_split_saved = {
+                    path: {
+                        shift: {
+                            box_type: splits.copy()
+                            for box_type, splits in st.session_state.box_split_config[path][shift].items()
+                        }
+                        for shift in SHIFTS
+                    }
+                    for path in PROCESS_PATHS
+                }
+                st.session_state.box_split_modified = False
+            st.toast("✅ Configuration saved.", icon="✅")
+            st.rerun()
+    st.markdown('<hr style="margin: 0.25rem -2rem 1.25rem -2rem; border: none; border-top: 1px solid #e5e7eb;">', unsafe_allow_html=True)
+
+    # Route to the selected sub-tab
+    if st.session_state.settings_subtab == 'Affinity Zones':
+        st.markdown("### Affinity Zones")
+        st.caption("Configure lane affinity zones for the selected DC and week.")
+        st.info("Affinity Zones configuration is not yet available in this prototype.")
+        st.stop()
+    elif st.session_state.settings_subtab == 'Batching':
+        render_batching_tab()
+        st.stop()
+
+    # ---- Plan Configuration (default sub-tab) ----
+    st.markdown("### Plan Configuration")
+    st.caption("Configure solver settings, routing rules, and shift parameters for the selected DC and week.")
+    st.caption("DC: AZ — Week: 2026-W40")
 
     with st.expander("🔲 Assembly Process Path Box Splits", expanded=True):
         st.markdown("Configure target box-type split percentages by process path to match operational mod configuration. The solver will use these as preferences when allocating boxes.")
@@ -802,51 +1043,13 @@ if st.session_state.current_tab == 'Configuration':
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # Check if all validations pass
+        # Aggregate validation — saving is handled by the top-row Save Configuration button.
         all_errors = []
         for path in PROCESS_PATHS:
-            df = create_split_table(path)
-            all_errors.extend(validate_splits(df))
-
-        all_valid = len(all_errors) == 0
-
-        # Save/Cancel buttons
-        col1, col2, col3 = st.columns([1, 1, 3])
-        with col1:
-            if st.button("💾 Save Configuration", use_container_width=True, type="primary", disabled=not all_valid, key="save_box_splits"):
-                # Save current config as the "saved" version
-                st.session_state.box_split_saved = {
-                    path: {
-                        shift: {
-                            box_type: splits.copy()
-                            for box_type, splits in st.session_state.box_split_config[path][shift].items()
-                        }
-                        for shift in SHIFTS
-                    }
-                    for path in PROCESS_PATHS
-                }
-                st.session_state.box_split_modified = False
-                st.success("✅ Box split configuration saved successfully!")
-
-        with col2:
-            if st.button("Cancel", use_container_width=True, key="cancel_box_splits"):
-                # Revert to saved config
-                st.session_state.box_split_config = {
-                    path: {
-                        shift: {
-                            box_type: splits.copy()
-                            for box_type, splits in st.session_state.box_split_saved[path][shift].items()
-                        }
-                        for shift in SHIFTS
-                    }
-                    for path in PROCESS_PATHS
-                }
-                st.session_state.box_split_modified = False
-                st.rerun()
-
-        # Show warning if there are unsaved changes
-        if st.session_state.box_split_modified:
-            st.markdown('<div class="warning-box">⚠️ You have unsaved changes. Click "Save Configuration" to apply or "Cancel" to discard.</div>', unsafe_allow_html=True)
+            all_errors.extend(validate_splits(create_split_table(path)))
+        if all_errors:
+            st.markdown('<div class="error-box"><strong>⚠️ Resolve these before saving:</strong><br>'
+                        + '<br>'.join(all_errors) + '</div>', unsafe_allow_html=True)
 
 # ============================================================================
 # PLANNING TAB (existing code)
@@ -857,11 +1060,11 @@ elif st.session_state.current_tab == 'Planning':
 
     # Success banner for plan generation (Production mode only)
     if st.session_state.mode == 'Production':
-        st.markdown('<div class="success-box">✅ <strong>Plan generation completed</strong> at 4/7/2026, 6:20:30 AM MST for AZ 2026-W22</div>', unsafe_allow_html=True)
+        st.markdown('<div class="success-box">✅ <strong>Plan generation completed</strong> at 4/7/2026, 6:20:30 AM MST for AZ 2026-W40</div>', unsafe_allow_html=True)
 
     # DC/Week header (only show in Production mode, Simulation mode has its own layout)
     if st.session_state.mode == 'Production':
-        st.markdown('<div style="color: #22c55e; font-size: 1.1rem; font-weight: 600; margin: 1rem 0 0.5rem 0;">AZ 2026-W22</div>', unsafe_allow_html=True)
+        st.markdown('<div style="color: #22c55e; font-size: 1.1rem; font-weight: 600; margin: 1rem 0 0.5rem 0;">AZ 2026-W40</div>', unsafe_allow_html=True)
 
         # Hamburger menu below the header (Production mode only)
         with st.popover("☰", use_container_width=False):
